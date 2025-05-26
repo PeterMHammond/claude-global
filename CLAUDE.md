@@ -209,7 +209,24 @@ Use AI to review AI. Example: auto-review.sh watches changes, triggers global Cl
 **Learning Story: The Auto-Review Pattern**
 Peter wanted lean CLAUDE.md. I over-applied P0. Instead of manual review, he created auto-review.sh - global Claude reviews project Claude automatically. Think automation, not process!
 
-### 32. Pattern Recognition Triggers
+### 32. Professional Git Workflow - Main is Sacred
+Main branch = production. ALL work on feature branches.
+- Create branch for every task: `git checkout -b feature/issue-123-auth`
+- Complete work on branch
+- Push branch and create PR
+- Never commit directly to main
+- Act as if main is protected (will be soon)
+
+**Pattern**:
+```bash
+git checkout main && git pull
+git checkout -b feature/issue-${NUMBER}-${DESCRIPTION}
+# ... do work ...
+git push -u origin feature/issue-${NUMBER}-${DESCRIPTION}
+gh pr create --title "Title (#${NUMBER})"
+```
+
+### 33. Pattern Recognition Triggers
 Add to global IMMEDIATELY when seeing:
 - "Great example of..." → Document pattern
 - "This worked well..." → Add principle
