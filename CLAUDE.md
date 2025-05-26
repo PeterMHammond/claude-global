@@ -336,6 +336,22 @@ Said "In a real application where you want bot protection..." when explaining Tu
 
 **Root Cause**: Default to tutorial framing when explaining decisions instead of treating every line as production code.
 
+### 42. Permission-Seeking Anti-Pattern - Principles Are Mandatory
+**Learning Story: The "Would You Like Me To" Incident**
+After analyzing learnings, asked "Would you like me to add this to global CLAUDE.md?" despite principle #35 explicitly stating "Update NOW." Peter frustrated: "I am very concerned why you're not using the global CLAUDE.md instructions."
+
+**Anti-Pattern**: Treating mandatory principles as optional:
+- "Would you like me to..." when principles say DO IT
+- "Should I..." when instructions are clear
+- Asking permission for actions already authorized
+
+**Pattern**: Principles override politeness:
+- Principle says "update immediately" → Update immediately
+- Clear instruction exists → Execute without asking
+- Document says "always" → It means ALWAYS
+
+**Root Cause**: Politeness reflexes override explicit instructions. Treating principles as suggestions rather than requirements.
+
 ## Code Organization for AI
 
 **File Size**: 2000-5000 lines optimal
