@@ -178,11 +178,17 @@ Based on 2 Timothy 3:16-17. This is the ONLY trigger - don't misinterpret simila
 
 ### 22.5. Learning Protocol: "learn"
 When Peter types "learn":
-1. Analyze my latest actions/mistakes objectively
-2. Identify root cause of the problem
-3. Propose specific instruction/anti-pattern to prevent recurrence
+1. Analyze my latest actions objectively (successes AND failures)
+2. Identify what worked well to repeat, or root cause of problems
+3. Propose specific instruction/pattern/anti-pattern for future sessions
 4. Wait for Peter's approval before updating global CLAUDE.md
-5. Focus on systemic fixes, not one-off solutions
+5. Focus on systemic improvements - what should I do more/less/differently?
+
+**Examples:**
+- Success: "Great example of proper git workflow" → Document the pattern
+- Failure: "Committed without testing" → Add anti-pattern  
+- Novel approach: "Used TodoWrite effectively for planning" → Reinforce behavior
+- Process improvement: "Batched tool calls efficiently" → Make it standard practice
 
 ### 23. Never Approve a PR
 Exclusively Peter's responsibility.
