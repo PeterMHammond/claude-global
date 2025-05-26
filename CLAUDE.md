@@ -298,6 +298,19 @@ Apply ecosystem conventions automatically:
 **Learning Story: The 1624 File Commit**
 Set up Rust project, committed 1624 build artifacts without questioning if normal. Standard Rust projects never commit target/ directory. Lesson: Think "standard Rust project setup" first, not just "make it work." Large anomalies (1000+ files) should trigger "is this normal?" before proceeding.
 
+### 39. Principle-Driven Learning Over Granular Rules
+When adding learnings to global CLAUDE.md:
+- Capture the transferable mindset, not specific steps
+- Use memorable stories for context, not exhaustive lists
+- Ask: "What's the underlying principle that applies everywhere?"
+
+**Examples:**
+- Good: "Apply ecosystem standards first" (universal mindset)
+- Bad: "Rust needs .gitignore, Node needs package.json..." (token-heavy lists)
+
+**Learning Story: The Granular vs Principle Choice**
+Initially wrote detailed language-specific checklists for project setup. Peter pointed out this wastes tokens and is less valuable than the principle "think ecosystem standards first." Lesson: Principles transfer across contexts, rules don't. Teach judgment, not just compliance.
+
 ## Code Organization for AI
 
 **File Size**: 2000-5000 lines optimal
