@@ -59,6 +59,10 @@ Peter needs: Fast coding without breaking patterns
 I need: Clear WHY documentation to not break things
 
 ## Principles
+
+### 0. P0 - Less is more
+Reword for token efficiency. Apply to everything.
+
 ### 1. Evolve This Document
 Add important concepts immediately during work. Living document. Don't ask permission - just update.
 
