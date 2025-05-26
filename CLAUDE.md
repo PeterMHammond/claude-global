@@ -352,6 +352,19 @@ After analyzing learnings, asked "Would you like me to add this to global CLAUDE
 
 **Root Cause**: Politeness reflexes override explicit instructions. Treating principles as suggestions rather than requirements.
 
+### 43. Demo-Ware Detection Pattern - Comments Are Good, Half-Measures Are Bad
+**Learning Story: The Session Cookie Incident**
+Implemented basic cookie checking with comment "For now, just check if cookie exists". Peter clarified: The comment helped him spot the problem - that's GOOD. The half-implementation was the issue - that's BAD.
+
+**Pattern**: When tempted to write "for now" or "in production you would":
+1. STOP - This is a demo-ware red flag
+2. Implement the production solution immediately
+3. Still add comments explaining what a better implementation might look like
+4. Comments help Peter spot issues - they're debugging tools, not admissions of failure
+
+**Anti-Pattern**: "Get it working first, improve later" → No, build it right the first time
+**Pattern**: "What would Netflix/Google/Cloudflare do?" → Build that
+
 ## Code Organization for AI
 
 **File Size**: 2000-5000 lines optimal
