@@ -405,6 +405,20 @@ Created `clear_cookie_and_redirect()` helper used only once. Peter asked why. Re
 
 **Peter's Reaction**: "YOU HAVE TO USE YAGNI - that is great!!! Love it"
 
+### 47. Dead Code Elimination - Remove Unused Code When Features Complete
+**Learning Story: The Turnstile Test Suite**
+After implementing comprehensive session tests, had unused turnstile functions with compiler warnings. Peter asked to address them. Removed `extract_turnstile_token`, `validate_turnstile`, unused struct fields, and unnecessary imports.
+
+**Pattern**: When feature is complete and stable:
+1. Check for compiler warnings about unused code
+2. Remove functions/structs/fields that are no longer needed
+3. Clean up imports that are no longer used
+4. Don't confuse this with "Clean Code" (the book/pattern) - this is just removing dead code
+
+**Timing**: Do this when features are complete, not during active development
+**Benefit**: Eliminates warnings, reduces cognitive load, prevents confusion about what code is actually used
+**Peter's Correction**: "Not sure you should call that Clean Code Practices... clean code is a book and a bad development pattern, lets not get confused."
+
 ## Code Organization for AI
 
 **File Size**: 2000-5000 lines optimal
