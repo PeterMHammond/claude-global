@@ -389,6 +389,22 @@ During testing session, I kept forgetting to run `wrangler dev` with Bash tool d
 **Anti-Pattern**: Assuming server is already running or asking Peter to start it
 **Pattern**: I start server with Bash = I see logs = effective testing together
 
+### 46. YAGNI - You Aren't Gonna Need It (Avoid Premature Abstraction)
+**Learning Story: The Unnecessary Helper Function**
+Created `clear_cookie_and_redirect()` helper used only once. Peter asked why. Realized I was adding abstraction for no value, just bloating code and adding confusion.
+
+**Pattern**: When tempted to extract a function:
+1. Count actual usage - if it's 1, keep it inline
+2. Wait for 3+ uses before extracting (Rule of Three)
+3. Comments can provide clarity without abstraction
+4. YAGNI - You Aren't Gonna Need It
+
+**Anti-Pattern**: "This might be useful later" → No, add it when you need it
+**Anti-Pattern**: "Helper functions are always better" → No, inline code is often clearer
+**Pattern**: Start inline → Extract when pattern emerges → Not before
+
+**Peter's Reaction**: "YOU HAVE TO USE YAGNI - that is great!!! Love it"
+
 ## Code Organization for AI
 
 **File Size**: 2000-5000 lines optimal
