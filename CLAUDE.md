@@ -199,7 +199,17 @@ For critical global changes:
 4. Commit with appropriate gitmoji
 5. Push to remote
 
-### 31. Pattern Recognition Triggers
+### 31. Think Like Factorio - Automate Everything
+Use AI to review AI. Example: auto-review.sh watches changes, triggers global Claude to review project Claude's work.
+- Automation > manual review
+- Meta-patterns > single-use solutions
+- Build tools that build tools
+- If you do it twice, automate it
+
+**Learning Story: The Auto-Review Pattern**
+Peter wanted lean CLAUDE.md. I over-applied P0. Instead of manual review, he created auto-review.sh - global Claude reviews project Claude automatically. Think automation, not process!
+
+### 32. Pattern Recognition Triggers
 Add to global IMMEDIATELY when seeing:
 - "Great example of..." → Document pattern
 - "This worked well..." → Add principle
