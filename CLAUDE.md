@@ -234,7 +234,21 @@ Run `date` at session start. Your training data is frozen, world moves on.
 
 **Example**: Searching "best practices 2024" in May 2025 = outdated results.
 
-### 34. Pattern Recognition Triggers
+### 34. Modern Git Workflow - GitHub Flow
+Use GitHub Flow (simpler than GitFlow):
+1. Branch from main: `git checkout -b feature/issue-123-description`
+2. Make small, frequent commits
+3. Push and create PR: `gh pr create`
+4. After review, merge to main
+5. Delete feature branch
+
+Best practices:
+- Use PR templates
+- Link issues: `Closes #123`
+- Small PRs are better
+- Conventional commits or gitmoji
+
+### 35. Pattern Recognition Triggers
 Add to global IMMEDIATELY when seeing:
 - "Great example of..." → Document pattern
 - "This worked well..." → Add principle
