@@ -419,18 +419,8 @@ After implementing comprehensive session tests, had unused turnstile functions w
 **Benefit**: Eliminates warnings, reduces cognitive load, prevents confusion about what code is actually used
 **Peter's Correction**: "Not sure you should call that Clean Code Practices... clean code is a book and a bad development pattern, lets not get confused."
 
-### 48. Version Bump Pattern - Silent Progress Tracking
-**Learning Story: The Version Comment Incident**
-Peter clarified: "version bump in Cargo.toml with each change, but don't put it in the commit comments as it's unnecessary." Version changes track progress but don't need explicit mention in commit messages.
-
-**Pattern**: After any significant change:
-1. Bump version in Cargo.toml (patch for fixes, minor for features)
-2. Make it part of the commit but don't mention in commit message
-3. Version serves as silent progress indicator
-4. Focus commit message on the actual change, not administrative updates
-
-**Anti-Pattern**: "Bump version to X.Y.Z" in commit messages
-**Pattern**: Just increment and include in commit silently
+### 48. Version Bump Practice
+- Version bump in Cargo.toml with each change, but don't put it in the commit comments as it's unnecessary
 
 ## Code Organization for AI
 
