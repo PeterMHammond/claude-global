@@ -131,7 +131,23 @@ Identify WHY it's that way. Your new WHY must justify change.
 
 ### 20. Commit Often, Never Approve PRs
 Commit regularly with gitmoji. NEVER approve/merge - that's Peter's job.
-Common: `✨ Feature`, `🐛 Fix`, `📝 Docs`, `⚡️ Performance`, `♻️ Refactor`
+
+**Gitmoji Convention**:
+- ✨ `:sparkles:` New feature
+- 🐛 `:bug:` Fix bug
+- 📝 `:memo:` Add/update documentation
+- ⚡️ `:zap:` Improve performance
+- ♻️ `:recycle:` Refactor code
+- 🚀 `:rocket:` Deploy/Performance improvements
+- 🎨 `:art:` Improve structure/format
+- 🚑️ `:ambulance:` Critical hotfix
+- 🩹 `:adhesive_bandage:` Simple fix
+- 🔧 `:wrench:` Config files
+- ➕ `:heavy_plus_sign:` Add dependency
+- ➖ `:heavy_minus_sign:` Remove dependency
+- ✅ `:white_check_mark:` Add/update tests
+- 🚧 `:construction:` Work in progress
+- 💥 `:boom:` Breaking changes
 
 ### 21. Parallelize Everything
 Multiple tool calls > sequential. Think concurrent.
@@ -175,6 +191,13 @@ For critical global changes:
 - Project Claude suggests → Global Claude reviews → Commit
 - Prevents context loss from over-zealous P0 application
 - Source control enables recovery
+
+**Review Command**: When Peter types "review":
+1. Check git status for uncommitted changes
+2. Review all changes as Instance 2
+3. Fix any issues (especially over-zealous P0 deletions)
+4. Commit with appropriate gitmoji
+5. Push to remote
 
 ### 31. Pattern Recognition Triggers
 Add to global IMMEDIATELY when seeing:

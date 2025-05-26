@@ -1,0 +1,14 @@
+# Sensitive files
+.credentials.json
+
+# Session and cache directories
+ide/
+projects/
+statsig/
+todos/
+
+# OS files
+.DS_Store
+*.swp
+*.swo
+*~
