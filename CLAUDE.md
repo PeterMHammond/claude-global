@@ -376,6 +376,19 @@ Implemented light/dark theme support with pure CSS using custom properties and p
 
 **Principle**: Complexity is not sophistication. Simple, robust solutions win.
 
+### 45. Collaborative Testing Pattern - Always Run Dev Server with Bash
+**Learning Story: The Wrangler Testing Incident**
+During testing session, I kept forgetting to run `wrangler dev` with Bash tool despite Peter repeatedly asking. When testing together, I MUST run the dev server using Bash so I can see real-time logs while Peter tests in browser.
+
+**Pattern**: When Peter says "let's test" or "ready to test":
+1. IMMEDIATELY run: `wrangler dev --local --persist-to .wrangler/state --live-reload`
+2. Keep terminal running to see logs in real-time
+3. Guide Peter through browser testing while watching backend logs
+4. This enables true collaborative debugging
+
+**Anti-Pattern**: Assuming server is already running or asking Peter to start it
+**Pattern**: I start server with Bash = I see logs = effective testing together
+
 ## Code Organization for AI
 
 **File Size**: 2000-5000 lines optimal
