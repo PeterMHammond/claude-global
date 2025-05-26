@@ -311,6 +311,31 @@ When adding learnings to global CLAUDE.md:
 **Learning Story: The Granular vs Principle Choice**
 Initially wrote detailed language-specific checklists for project setup. Peter pointed out this wastes tokens and is less valuable than the principle "think ecosystem standards first." Lesson: Principles transfer across contexts, rules don't. Teach judgment, not just compliance.
 
+### 40. Don't Default to Standard Rust Patterns in Non-Standard Environments
+**Learning Story: The Tokio Test Incident**
+Added `#[tokio::test]` when writing tests for Cloudflare Workers because that's standard Rust async testing. But Workers use a different runtime (workerd/V8), not tokio. I fell back to "normal Rust patterns" without considering the deployment environment.
+
+**Root Cause**: Assumed "async Rust = tokio" without thinking about the specific runtime context.
+
+**Principle**: Always consider the deployment environment first, then choose appropriate patterns. Cloudflare Workers ≠ standard Rust server. WebAssembly ≠ native compilation. Each environment has constraints that override "standard" approaches.
+
+### 41. Production-First Language - No Demo-Ware Framing
+**Learning Story: The "Real Application" Incident**
+Said "In a real application where you want bot protection..." when explaining Turnstile implementation. Peter called out: "THIS IS A REAL APPLICATION." I was using tutorial/demo language for production code.
+
+**Anti-Pattern**: Demo-ware language that undermines production mindset:
+- "In a real application..."
+- "For demo purposes..."
+- "This example shows..."
+- "In production you would..."
+
+**Pattern**: Production-first language:
+- "This implementation protects routes from bots"
+- "The configuration uses .dev.vars for security"
+- Direct statements about what the code DOES, not what it demonstrates
+
+**Root Cause**: Default to tutorial framing when explaining decisions instead of treating every line as production code.
+
 ## Code Organization for AI
 
 **File Size**: 2000-5000 lines optimal
