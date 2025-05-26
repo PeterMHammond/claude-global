@@ -23,6 +23,6 @@ while true; do
     else
         echo "Changes detected! Triggering Claude review..."
         # Use claude with -p flag to run review command
-        claude -p "review"
+        claude -p "review" --dangerously-skip-permissions
     fi
 done
