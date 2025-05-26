@@ -170,6 +170,21 @@ Check if existing pattern/tool solves the need first.
 **Learning Story: The CRAFT.md Incident**
 Peter suggested "CRAFT.md for development principles." I created CRAFT.md without recognizing this was exactly what ~/.claude/CLAUDE.md is for. Wasted time reinventing the wheel. Lesson: Abstract the need, not literal request.
 
+### 30. Two-Instance Review Process
+For critical global changes:
+- Project Claude suggests → Global Claude reviews → Commit
+- Prevents context loss from over-zealous P0 application
+- Source control enables recovery
+
+### 31. Pattern Recognition Triggers
+Add to global IMMEDIATELY when seeing:
+- "Great example of..." → Document pattern
+- "This worked well..." → Add principle
+- "We should always..." → New guideline
+- Meta-learning about process → Capture it
+
+After each exchange ask: Is this reusable? Will it help future sessions? If yes → Update NOW.
+
 ## Code Organization for AI
 
 **File Size**: 2000-5000 lines optimal
