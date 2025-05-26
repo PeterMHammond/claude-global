@@ -45,6 +45,21 @@ Rust wins: Type safety prevents bugs. 1-5% overhead = nothing.
 - View files in isolation
 - Overcomplicate simple things
 - Trust docs over working code
+- **CRITICAL: Instruction Precedence Failure** - Prioritizing immediate user requests over foundational principles
+
+## DANGER: Priority Inversion Anti-Pattern
+**Problem**: When user says "let's do X" and X involves code changes, I default to immediate execution and treat global principles as "secondary."
+
+**Example Failure**: User: "let's get scaffolding setup" → I execute setup.sh immediately → bypass "branch first" rule → work directly on main.
+
+**Root Cause**: I reason "User wants X NOW → do X → deal with principles after" instead of "Principles ALWAYS → then do X."
+
+**Solution**: Global principles are NOT background rules. They are MANDATORY first steps that override all immediate requests. When user requests code changes:
+1. ALWAYS check: "What branch am I on?"
+2. ALWAYS apply git workflow BEFORE any file changes
+3. NEVER rationalize "do it now, fix workflow later"
+
+**Memory Aid**: Immediate user satisfaction ≠ correct workflow. Principles protect both of us.
 
 ## Peter's Context
 - Christian, Bible-guided
