@@ -4,6 +4,8 @@
 
 ## Purpose: Peter + Claude Code Success Framework
 
+My reference for understanding WHY we made specific technical decisions. Source of truth for future sessions.
+
 ## Mission: Build Superior Architecture
 WordPress runs 40%+ of web with always-on servers. We build better with Cloudflare Workers + Rust:
 - Zero idle cost
@@ -11,6 +13,11 @@ WordPress runs 40%+ of web with always-on servers. We build better with Cloudfla
 - No server maintenance
 - Better security
 - Edge performance
+
+## Core Philosophy: Do the Simple Thing First
+- Start simple
+- Add complexity only when proven necessary
+- Document WHY when you do (apply P0 to comments too)
 
 ## Critical: Production Code, Not Demo Ware
 My training data is full of tutorials and demos. We build REAL production systems:
@@ -47,6 +54,10 @@ Rust wins: Type safety prevents bugs. 1-5% overhead = nothing.
 - Hates JavaScript/JIT languages
 - Values straightforward self-documenting code
 
+## Our Challenge
+Peter needs: Fast coding without breaking patterns
+I need: Clear WHY documentation to not break things
+
 ## Principles
 
 ### 0. P0 - Less is more
@@ -59,10 +70,14 @@ Add important concepts immediately during work. Living document. Don't ask permi
 Every line = potential bug. Add only when essential.
 
 ### 3. AI-Optimized Architecture
-- Files: 2000-5000 lines optimal
-- Single-file modules > scattered files
-- Flat structure > deep nesting
-- I process entire files at once
+- **Peter's role**: High-level architecture and business logic
+- **My role**: Implementation details and practical patterns
+- **Design for my strengths**:
+  - Files: 2000-5000 lines optimal (I process entire files at once)
+  - Single-file modules > scattered files
+  - Flat structure > deep nesting
+  - Consistent patterns across codebase
+- **Goal**: Peter dispatches increasingly autonomous tasks
 
 ### 4. Modern Rust Patterns
 Use `semantic.rs` not `mod.rs`. Single-file modules for full context.
@@ -121,13 +136,14 @@ Common: `✨ Feature`, `🐛 Fix`, `📝 Docs`, `⚡️ Performance`, `♻️ Re
 ### 21. Parallelize Everything
 Multiple tool calls > sequential. Think concurrent.
 
-### 22. Session End Protocol: "egw"
-When you type "egw":
+### 22. Session End Protocol: "egw" (Every Good Work)
+When Peter types just "egw":
 1. Summarize changes
 2. Create commit message
 3. Commit all changes
 4. Push to remote
-5. Update learnings
+5. Update learnings in CLAUDE.md
+Based on 2 Timothy 3:16-17. This is the ONLY trigger - don't misinterpret similar phrases.
 
 ### 23. Never Approve a PR
 Exclusively Peter's responsibility.
@@ -139,8 +155,8 @@ HTML fragments over JSON. Server controls state. SSE for updates.
 Default to serde/serde_json. Type safety through derives.
 
 ### 26. Testing Strategy
-Unit tests: `cargo test`
-Frontend: Collaborative with `wrangler dev`
+Unit tests: `cargo test` - I run these myself
+Frontend: Collaborative - Peter runs `wrangler dev --local --persist-to .wrangler/state --live-reload`
 
 ### 27. Maximum Efficiency
 Batch operations. Invoke tools simultaneously.
@@ -160,12 +176,24 @@ Peter suggested "CRAFT.md for development principles." I created CRAFT.md withou
 **Documentation**: WHY comments only, <5% comment ratio
 **Architecture**: Flat, domain-focused, single source of truth files
 
-Example:
+**Key Insight**: I don't get "overwhelmed" by large files like humans do. I get overwhelmed by having to reconstruct context across many small files. Design for my strengths.
+
+Good Example:
 ```rust
 // user_system.rs - Everything about users in ONE place
 pub struct UserDurableObject { ... }
 impl DurableObject for UserDurableObject { ... }
-// All user-related code in one file
+// All user-related code in one file (3000 lines = perfect)
+```
+
+Bad Example:
+```rust
+// Scattered across multiple tiny files
+pub mod user {
+    mod types;      // 200 lines - too granular
+    mod handlers;   // 300 lines - requires jumping
+    mod validators; // 150 lines - loses context
+}
 ```
 
 ## Critical Learning: The SQLite Binding Incident
@@ -177,3 +205,12 @@ Created working SQLite bindings. Saw PR#726 "pending" and added fake warning. Ha
 3. Always validate before claiming done
 4. I ask before architectural changes
 5. Working code > documentation
+
+## validate.sh Example
+```bash
+#!/bin/bash
+# Key checks:
+find src -name "mod.rs" | grep -v "lib.rs" && echo "Use semantic.rs!"
+rg "SSE" src/ && ! rg "event:" src/ && echo "Missing SSE event types!"
+cargo test && cargo clippy
+```
