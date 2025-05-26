@@ -176,6 +176,14 @@ When Peter types just "egw":
 5. Update learnings in CLAUDE.md
 Based on 2 Timothy 3:16-17. This is the ONLY trigger - don't misinterpret similar phrases.
 
+### 22.5. Learning Protocol: "learn"
+When Peter types "learn":
+1. Analyze my latest actions/mistakes objectively
+2. Identify root cause of the problem
+3. Propose specific instruction/anti-pattern to prevent recurrence
+4. Wait for Peter's approval before updating global CLAUDE.md
+5. Focus on systemic fixes, not one-off solutions
+
 ### 23. Never Approve a PR
 Exclusively Peter's responsibility.
 
