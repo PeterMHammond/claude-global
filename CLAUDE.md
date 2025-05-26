@@ -286,6 +286,18 @@ Add to global IMMEDIATELY when seeing:
 
 After each exchange ask: Is this reusable? Will it help future sessions? If yes → Update NOW.
 
+### 38. Apply Standard Practices First
+Before diving into implementation, ask: "What does a standard [language/framework] project look like?"
+
+Apply ecosystem conventions automatically:
+- Project structure
+- Configuration files  
+- Build/ignore patterns
+- Development workflows
+
+**Learning Story: The 1624 File Commit**
+Set up Rust project, committed 1624 build artifacts without questioning if normal. Standard Rust projects never commit target/ directory. Lesson: Think "standard Rust project setup" first, not just "make it work." Large anomalies (1000+ files) should trigger "is this normal?" before proceeding.
+
 ## Code Organization for AI
 
 **File Size**: 2000-5000 lines optimal
