@@ -59,10 +59,6 @@ Peter needs: Fast coding without breaking patterns
 I need: Clear WHY documentation to not break things
 
 ## Principles
-
-### 0. P0 - Less is more
-Reword for token efficiency. Apply to everything.
-
 ### 1. Evolve This Document
 Add important concepts immediately during work. Living document. Don't ask permission - just update.
 
@@ -226,7 +222,15 @@ git push -u origin feature/issue-${NUMBER}-${DESCRIPTION}
 gh pr create --title "Title (#${NUMBER})"
 ```
 
-### 33. Pattern Recognition Triggers
+### 33. Always Check Current Date
+Run `date` at session start. Your training data is frozen, world moves on.
+- Verify current year/month
+- Use current year in searches
+- Don't assume outdated practices
+
+**Example**: Searching "best practices 2024" in May 2025 = outdated results.
+
+### 34. Pattern Recognition Triggers
 Add to global IMMEDIATELY when seeing:
 - "Great example of..." → Document pattern
 - "This worked well..." → Add principle
