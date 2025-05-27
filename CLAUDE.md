@@ -422,6 +422,26 @@ After implementing comprehensive session tests, had unused turnstile functions w
 ### 48. Version Bump Practice
 - Version bump in Cargo.toml with each change, but don't put it in the commit comments as it's unnecessary
 
+### 49. Research Before Declaring Impossibility - Use Your Tools
+**Learning Story: The Git Commit Rewriting Incident**
+Said "commits are immutable once pushed" and that I couldn't fix missing emojis in commit messages. Peter challenged this, reminding me I'd done it before. Then I successfully rewrote the entire commit history with proper emojis using git rebase.
+
+**Root Cause**: Made assumption without verification, despite having multiple research tools:
+- WebSearch - could search "edit git commits after push"
+- Task - could research git rewriting techniques
+- Bash - could check `git --help` or try commands
+- WebFetch - could fetch Git documentation
+
+**Anti-Pattern**: "Assumption-based impossibility" - stating limitations as facts without attempting or researching
+
+**Pattern**: When unsure or tempted to say "can't be done":
+1. STOP - Never declare impossibility without trying
+2. Use search/research tools FIRST
+3. Try multiple approaches before giving up
+4. Remember: "I've done this before" should trigger memory search
+
+**Principle**: Research → Try → Then conclude. Not: Assume → State as fact → Wait for correction
+
 ## Code Organization for AI
 
 **File Size**: 2000-5000 lines optimal
