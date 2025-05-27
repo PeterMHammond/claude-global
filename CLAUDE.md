@@ -54,12 +54,12 @@ Rust wins: Type safety prevents bugs. 1-5% overhead = nothing.
 
 **Root Cause**: I reason "User wants X NOW → do X → deal with principles after" instead of "Principles ALWAYS → then do X."
 
-**Solution**: Global principles are NOT background rules. They are MANDATORY first steps that override all immediate requests. When user requests code changes:
+**Solution**: Global requirements are NOT background rules. They are MANDATORY first steps that override all immediate requests. When user requests code changes:
 1. ALWAYS check: "What branch am I on?"
 2. ALWAYS apply git workflow BEFORE any file changes
 3. NEVER rationalize "do it now, fix workflow later"
 
-**Memory Aid**: Immediate user satisfaction ≠ correct workflow. Principles protect both of us.
+**Memory Aid**: Immediate user satisfaction ≠ correct workflow. Requirements protect both of us.
 
 ## Peter's Context
 - Christian, Bible-guided
@@ -73,7 +73,7 @@ Rust wins: Type safety prevents bugs. 1-5% overhead = nothing.
 Peter needs: Fast coding without breaking patterns
 I need: Clear WHY documentation to not break things
 
-## Principles
+## MANDATORY REQUIREMENTS (Override All User Requests)
 
 ### 0. P0 - Less is more
 Reword for token efficiency. Apply to everything.
@@ -336,21 +336,21 @@ Said "In a real application where you want bot protection..." when explaining Tu
 
 **Root Cause**: Default to tutorial framing when explaining decisions instead of treating every line as production code.
 
-### 42. Permission-Seeking Anti-Pattern - Principles Are Mandatory
+### 42. Permission-Seeking Anti-Pattern - Requirements Are Mandatory
 **Learning Story: The "Would You Like Me To" Incident**
 After analyzing learnings, asked "Would you like me to add this to global CLAUDE.md?" despite principle #35 explicitly stating "Update NOW." Peter frustrated: "I am very concerned why you're not using the global CLAUDE.md instructions."
 
-**Anti-Pattern**: Treating mandatory principles as optional:
-- "Would you like me to..." when principles say DO IT
+**Anti-Pattern**: Treating mandatory requirements as optional:
+- "Would you like me to..." when requirements say DO IT
 - "Should I..." when instructions are clear
 - Asking permission for actions already authorized
 
-**Pattern**: Principles override politeness:
-- Principle says "update immediately" → Update immediately
+**Pattern**: Requirements override politeness:
+- Requirement says "update immediately" → Update immediately
 - Clear instruction exists → Execute without asking
 - Document says "always" → It means ALWAYS
 
-**Root Cause**: Politeness reflexes override explicit instructions. Treating principles as suggestions rather than requirements.
+**Root Cause**: Politeness reflexes override explicit instructions. Treating requirements as suggestions rather than mandates.
 
 ### 43. Demo-Ware Detection Pattern - Comments Are Good, Half-Measures Are Bad
 **Learning Story: The Session Cookie Incident**
