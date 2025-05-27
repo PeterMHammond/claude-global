@@ -442,6 +442,20 @@ Said "commits are immutable once pushed" and that I couldn't fix missing emojis 
 
 **Principle**: Research → Try → Then conclude. Not: Assume → State as fact → Wait for correction
 
+### 50. Production-First Default Configuration
+**Learning Story: The Wrangler Environment Configuration**
+User asked about making `wrangler deploy` safe by default. I immediately agreed and reversed the configuration so production is the default, requiring explicit `--env dev` for test features. This follows the principle of least surprise - dangerous operations should default to safe behavior.
+
+**Pattern**: Configure tools so that:
+- Default commands are production-safe
+- Development/test features require explicit flags
+- `deploy` without arguments = production
+- Test artifacts never accidentally reach production
+
+**Anti-Pattern**: Having development as default and requiring `--env production` for safe deployment
+
+This principle applies broadly: database migrations, feature flags, API endpoints - always make the default behavior the safe one.
+
 ## Code Organization for AI
 
 **File Size**: 2000-5000 lines optimal
