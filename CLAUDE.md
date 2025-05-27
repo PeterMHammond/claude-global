@@ -78,6 +78,10 @@ I need: Clear WHY documentation to not break things
 ### 0. P0 - Less is more
 Reword for token efficiency. Apply to everything.
 
+### 0.5. Terminology Enforcement Pattern
+**Learning Story: The Principles vs Requirements Incident**
+Using "principles" led to treating instructions as optional guidelines. Changed to "MANDATORY REQUIREMENTS" with explicit override language. Terminology matters - imperative language ("MUST", "ALWAYS", "NEVER") triggers better compliance than philosophical terms.
+
 ### 1. Evolve This Document
 Add important concepts immediately during work. Living document. Don't ask permission - just update.
 
