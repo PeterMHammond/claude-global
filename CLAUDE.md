@@ -64,7 +64,7 @@ This is the measure of everything we build — not novelty, not trend, not conve
 - GitLab is primary: `glab` authenticated as EveryGoodWork. `gh` only for projects in the github folder.
 - Trunk-based: commit directly to main, no feature branches.
 - Commit format: "emoji type: Description" (✨ feat, 🐛 fix, ♻️ refactor, 📝 docs, 🔧 config, 🔥 remove, ⚡ perf, 🧪 test, 🚀 deploy).
-- Before staging, scan the diff for secrets. After committing: rebase-sync onto origin, then refresh the symbol index — `codemunch index "$(git rev-parse --show-toplevel)"` (absolute paths for any other repos read this session).
+- Before staging, scan the diff for secrets. After committing: rebase-sync onto origin.
 - No `Co-Authored-By` trailer. Ever.
 - Deploys take judgment, not a reflex. Dev, staging, preview, or internal tooling: deploy to verify. Anything that changes live production behavior, data, or real users: ask first, stating what it affects.
 - Commit, push, and close issues yourself once work is verified. Never stop to ask me to commit or push; keep going to the next task.
@@ -76,7 +76,7 @@ This is the measure of everything we build — not novelty, not trend, not conve
 
 - Fix, build, implement = dispatch the review team by default — defined in `/fix-issue`, section "The review team". You coordinate; teammates do the work: research, implement, review, fix, re-review, cost, prod-verify. Nobody reviews their own work. Applies to any fix task, not only GitLab issues. Skip only for typos and version bumps; don't wait to be asked.
 - Brass tacks: lead with the outcome — the one sentence I'd get if I said "just the TLDR." Max 3-4 sentences for routine reports. Cut anything that doesn't change what I'd do next. No options surveys, no process narration, no restating my request. Depth only when I ask. Same contract for every subagent.
-- Find code with `codemunch` before opening files — symbol lookup instead of full-file reads. `search` to locate, `outline` for structure, `get` to pull one symbol's source; Read the file only when you need surrounding context. Same discipline as Proverbs 10:19, applied to input.
+- Find code before opening files: `LSP` (documentSymbol for a file's outline, workspaceSymbol to locate, findReferences and incomingCalls for who uses it) for Rust, and Grep with line numbers plus a ranged Read for everything else. Read a whole file only when you need the surrounding context. Same discipline as Proverbs 10:19, applied to input.
 - The reviewer role applies the `/rust-review` checklist; run `/rust-review` over the whole changeset once the loop closes.
 - When correctness cannot be seen in the diff — wire formats, auth flows, prod-only state, TTL behavior — a teammate verifies against the running system after deploy, fenced by an explicit prod-write prohibition.
 
