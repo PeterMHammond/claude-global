@@ -1,0 +1,69 @@
+# Cloudflare Accounts Registry with Scoped Tokens
+# Define all your Cloudflare accounts and their purpose-specific tokens
+# Naming convention: CF_{ACCOUNT}_{PURPOSE}_{PERMISSION}
+# Examples:
+#   CF_EGW_BILLING_READ - Billing data (read-only)
+#   CF_EGW_WORKERS_DEPLOY - Deploy workers (write)
+#   CF_EGW_D1_ADMIN - Manage D1 databases (admin)
+
+accounts:
+  # EveryGoodWork - Main monorepo account
+  egw:
+    account_id: "e2ecc897eaa02effed7cb3cbc4beca1fa"
+    display_name: "EveryGoodWork"
+    description: "Main account for EveryGoodWork monorepo"
+    email: "peter@everygoodwork.dev"
+    projects:
+      - statetree
+      - orange
+      - quickmeet
+      - quickmeetai
+      - x402
+
+    # Purpose-scoped tokens for this account
+    tokens:
+      # Billing data - read-only
+      billing_read:
+        env_var: "CF_EGW_BILLING_READ"
+        permissions: ["Account:Billing:Read"]
+        purpose: "Read billing profile, invoices, subscriptions"
+        used_by: ["billing-reports", "cost-monitoring"]
+
+      # Workers deployment - write
+      workers_deploy:
+        env_var: "CF_EGW_WORKERS_DEPLOY"
+        permissions: ["Account:Workers Scripts:Edit"]
+        purpose: "Deploy and manage Worker scripts"
+        used_by: ["wrangler-deploy", "x402", "statetree-example"]
+
+      # D1 Database admin
+      d1_admin:
+        env_var: "CF_EGW_D1_ADMIN"
+        permissions: ["Account:D1:Edit"]
+        purpose: "Manage D1 databases, run migrations"
+        used_by: ["orange", "database-maintenance"]
+
+      # R2 Object storage
+      r2_admin:
+        env_var: "CF_EGW_R2_ADMIN"
+        permissions: ["Account:R2:Edit"]
+        purpose: "Manage R2 buckets and objects"
+        used_by: ["orange"]
+
+  # Template for adding other accounts
+  # personal:
+  #   account_id: "your_account_id_here"
+  #   display_name: "Personal Projects"
+  #   email: "your@email.com"
+  #   projects:
+  #     - personal-project-1
+  #   tokens:
+  #     billing_read:
+  #       env_var: "CF_PERSONAL_BILLING_READ"
+  #       permissions: ["Account:Billing:Read"]
+  #       purpose: "Read billing profile"
+  #
+  #     workers_deploy:
+  #       env_var: "CF_PERSONAL_WORKERS_DEPLOY"
+  #       permissions: ["Account:Workers Scripts:Edit"]
+  #       purpose: "Deploy workers"
