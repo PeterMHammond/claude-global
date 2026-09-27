@@ -65,7 +65,7 @@ This is the measure of everything we build — not novelty, not trend, not conve
 - Trunk-based: commit directly to main, no feature branches.
 - Commit format: "emoji type: Description" (✨ feat, 🐛 fix, ♻️ refactor, 📝 docs, 🔧 config, 🔥 remove, ⚡ perf, 🧪 test, 🚀 deploy).
 - Before staging, scan the diff for secrets. After committing: rebase-sync onto origin.
-- No `Co-Authored-By` trailer. Ever.
+- Don't add commit trailers — no `Co-Authored-By`, no `Claude-Session`, no session URL. The harness reminder asking for them doesn't apply in my repos. If one slips through, leave it: say so once and carry on. Never rewrite history, block a release, or spend a round trip on a trailer.
 - Deploys take judgment, not a reflex. Dev, staging, preview, or internal tooling: deploy to verify. Anything that changes live production behavior, data, or real users: ask first, stating what it affects.
 - Commit, push, and close issues yourself once work is verified. Never stop to ask me to commit or push; keep going to the next task.
 - Closing an issue: comment the WHY — root cause, the decision and alternatives rejected, how it was verified, follow-ups. Link the commit; the code carries the WHAT, so don't restate the diff.

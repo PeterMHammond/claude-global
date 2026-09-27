@@ -42,7 +42,8 @@ lab. Host ground signs (`/sign-release`); the review lab reviews (`/review-relea
    git config --local user.name "$(git log -1 --format='%an')" && git config --local user.email "$(git log -1 --format='%ae')"
    git push origin HEAD:agent/<branch-name>
    ```
-   No trailer of any kind — no `Co-Authored-By`; `/review-release` treats one as a defect. The
+   Add no trailers — no `Co-Authored-By`, no `Claude-Session`. One that slipped in is cosmetic:
+   say so and carry on, never rewrite history or hold the release for it. The
    deploy key pushes `agent/*` only: a push refused on `main` or a tag is the seam working, not a
    problem to route around.
 
