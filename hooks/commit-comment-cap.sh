@@ -9,14 +9,14 @@ IN=$(cat)
 CMD=$(jq -r '.tool_input.command // empty' <<<"$IN")
 grep -qE 'git( +-C +[^ ]+)? +(add|commit)' <<<"$CMD" || exit 0
 
-DIR=$(jq -r '.cwd // empty' <<<"$IN")
-D=$(grep -oE '(^|[;&] *)cd +[^;&|]+' <<<"$CMD" | head -1 | sed -E 's/^[;& ]*cd +//; s/^["'"'"']//; s/["'"'"'] *$//')
-[ -n "$D" ] && [ -d "$D" ] && DIR=$D
-C=$(grep -oE 'git +-C +[^ ]+' <<<"$CMD" | head -1 | awk '{print $3}')
-[ -n "$C" ] && [ -d "$C" ] && DIR=$C
-cd "${DIR:-.}" 2>/dev/null && git rev-parse --git-dir >/dev/null 2>&1 || exit 0
+CWD=$(jq -r '.cwd // empty' <<<"$IN")
+DIRS=$({ echo "$CWD"
+         grep -oE '(^|[;&(] *)cd +[^;&|)]+' <<<"$CMD" | sed -E 's/^[;&( ]*cd +//; s/[[:space:]]+$//; s/^["'"'"']//; s/["'"'"']$//'
+         grep -oE 'git +-C +[^ ]+' <<<"$CMD" | awk '{print $3}'
+       } | while read -r d; do [ -d "$d" ] && git -C "$d" rev-parse --show-toplevel 2>/dev/null; done | sort -u)
+[ -n "$DIRS" ] || exit 0
 
-FOUND=$({ git diff HEAD -U0 -M --no-color 2>/dev/null
+FOUND=$(for R in $DIRS; do cd "$R" || continue; { git diff HEAD -U0 -M --no-color 2>/dev/null
           git ls-files -o --exclude-standard -z | xargs -0 -r -n1 git diff --no-index -U0 --no-color /dev/null 2>/dev/null
         } | awk -v cap="$CAP" '
   /^\+\+\+ / { f = $0; sub(/^\+\+\+ (b\/)?/, "", f); next }
@@ -28,7 +28,7 @@ FOUND=$({ git diff HEAD -U0 -M --no-color 2>/dev/null
     else if (f ~ /\.html$/) c = (text ~ /^(\{#|<!--)/)
     else c = 0
     if (c && length(line) > cap) printf "  %s:%d (%d chars)\n", f, n, length(line)
-    n++ }')
+    n++ }'; done)
 
 [ -z "$FOUND" ] && exit 0
 { printf '✗ comment cap — added comment line(s) over %d chars; nothing was run:\n%s\n' "$CAP" "$FOUND"
