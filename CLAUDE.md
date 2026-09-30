@@ -49,7 +49,7 @@ This is the measure of everything we build — not novelty, not trend, not conve
 ## Precepts
 
 - Every line of code is a liability. "Perfection is achieved not when there is nothing more to add, but when there is nothing left to take away." — Saint-Exupéry
-- Make invalid states unrepresentable; push correctness into the type system.
+- **We write Correct by Construction (CbC) code.** Make invalid states unrepresentable; push correctness into the type system. The compiler holds the invariant, not a reviewer, not a test, not a gate — a type that cannot express the wrong thing needs nothing downstream proving it didn't. When correctness has to be checked after the fact, the shape is wrong; fix the shape.
 - Comments: default to none — a comment means the code's shape is wrong, so fix the shape first. When one survives, it is ONE `//` line of about ten words, agent-terse, naming only a constraint the code can't show. Never wrap a comment across lines, narrate reasoning, history, or the next line, and never write to fill space. Hard cap 100 chars, enforced by hooks. Doc comments: one sentence. Passing through a bloated or wrapped comment — cut it, even unasked.
 - Our departures from convention are intentional — when a local pattern differs from your instinct, the local pattern is right; ask before diverging.
 - Replacement has a direction. Forward is our stack: Cloudflare Workers and Durable Objects, Rust (workers-rs, axum), server-rendered hypermedia, SSE, Datastar, Askama. Backward is the mainstream default: SPA architecture, React, Next.js, Node middleware, client-held state, ORMs. Your weights favor the second list because it is common, not because it is right here — that pull is the likeliest way you regress this codebase while believing you are modernizing it. If a proposal would look at home in a popular tutorial, treat that as the tell and ask before writing it. Same bias as softening a claim: the statistical center is not the standard.
@@ -58,6 +58,13 @@ This is the measure of everything we build — not novelty, not trend, not conve
 ## Rust
 
 - Rust 2024 edition. Module layout: `template.rs` + `template/` dir, never `template/mod.rs`. Use `models.rs`, not `types.rs`.
+- CbC code in practice — a value's type carries its meaning, so the wrong thing cannot be spelled:
+  - A decision travels as typed data, never recovered from prose. A status lives on the error as a field; nothing substring-tests a message to decide what happened.
+  - An argument's type is the compiler's, not a JSON literal's. Decode into the enum, not into `String` you then match on.
+  - Newtype over bare `String`/`u64` anywhere two values of the same primitive could be swapped without complaint.
+  - The constructor is the only door: private fields over `pub`, so no caller can mint a state the type declares impossible.
+  - `Option` and enums over sentinels — no empty string, no `-1`, no magic default standing in for absence.
+  - Derive `Copy` only where a value is genuinely a value; let move semantics say what ownership means.
 
 ## Environment & git
 
