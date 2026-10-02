@@ -47,6 +47,14 @@ lab. Host ground signs (`/sign-release`); the review lab reviews (`/review-relea
    deploy key pushes `agent/*` only: a push refused on `main` or a tag is the seam working, not a
    problem to route around.
 
+   **Then rehearse the airlock on the pushed sha** (watchman#85):
+   ```
+   lab rehearse <full sha>
+   ```
+   It builds every `target.*` the tree's `airlock.toml` declares, offline, under the airlock's cut.
+   Red here is a defect on this branch: fix, push, rehearse again. Gates and `cargo build` are not
+   the airlock path; craft v2.154.16 was signed green and spent its tag on a dev-only env read.
+
 4. **Print exactly this block and stop.** Every placeholder filled:
 
    ```
@@ -56,6 +64,7 @@ lab. Host ground signs (`/sign-release`); the review lab reviews (`/review-relea
    tests    <the cargo test totals>
    scan     <the scan summary line>
    skipped  <count>
+   rehearse <each target's digest line, or "no targets" for a tree without them>
    ```
 
    Review Lab, in a `Projects/review` session:
