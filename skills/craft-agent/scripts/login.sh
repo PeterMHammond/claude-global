@@ -43,7 +43,7 @@ steps once (no expiry, no refresh):
   3. Copy the Client ID (ends with ".access") and Client Secret. You won't
      see the secret again — copy now.
 
-  4. Grant the service token access to the craft.everygoodwork.dev
+  4. Grant the service token access to the craft.everygoodwork.io
      application. Zero Trust → Access → Applications → craft → Policies →
      add a policy:
        Action: Service Auth
@@ -53,7 +53,7 @@ steps once (no expiry, no refresh):
 
      cat > ~/.craft/token.json <<'JSON'
      {
-       "base":          "https://craft.everygoodwork.dev",
+       "base":          "https://craft.everygoodwork.io",
        "client_id":     "<paste Client ID>",
        "client_secret": "<paste Client Secret>"
      }

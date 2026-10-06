@@ -32,7 +32,7 @@ Edit: `~/.claude/cf-accounts.yaml`
 ```yaml
 accounts:
   egw:
-    account_id: "e2ecc897eaa02effed7cb3cbc4beca1fa"
+    account_id: "e2ecc897eaa02efed7cb3cbc4beca1fa"
     display_name: "EveryGoodWork"
     token_env: "CLOUDFLARE_API_TOKEN_EGW"
     projects:
@@ -114,7 +114,7 @@ Output:
 Registered Cloudflare Accounts:
 
   egw - EveryGoodWork
-    ID: e2ecc897eaa02effed7cb3cbc4beca1fa
+    ID: e2ecc897eaa02efed7cb3cbc4beca1fa
 
   personal - Personal Projects
     ID: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
@@ -154,7 +154,7 @@ Each project specifies its account_id in `wrangler.toml`:
 
 **x402 (`/home/peter/Projects/EveryGoodWork/x402/wrangler.toml`):**
 ```toml
-account_id = "e2ecc897eaa02effed7cb3cbc4beca1fa"
+account_id = "e2ecc897eaa02efed7cb3cbc4beca1fa"
 ```
 
 **personal-worker (`~/projects/personal-worker/wrangler.toml`):**

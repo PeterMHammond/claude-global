@@ -11,7 +11,7 @@ Run both **concurrently** so one window holds every hop. Close stray `/health` t
 2. **Server driver** (terminal, backgrounded): `bash scripts/drive.sh`
    It prints `t0`, fires the rounds, settles, and prints the `report.sh` command.
 3. **Client driver** (you, via claude-in-chrome MCP), concurrently with step 2:
-   - `tabs_create_mcp` → `navigate` to `https://craft.everygoodwork.dev/health`
+   - `tabs_create_mcp` → `navigate` to `https://craft.everygoodwork.io/health`
    - `find` the "⚡ Trigger Ping" button (or screenshot for its coords)
    - Click it ~20 times, ~3s apart, in `browser_batch` chunks of ~5 clicks
      (`left_click` + `wait 3`). Keep batches short — a long batch can drop the extension

@@ -9,10 +9,10 @@
 accounts:
   # EveryGoodWork - Main monorepo account
   egw:
-    account_id: "e2ecc897eaa02effed7cb3cbc4beca1fa"
+    account_id: "e2ecc897eaa02efed7cb3cbc4beca1fa"
     display_name: "EveryGoodWork"
     description: "Main account for EveryGoodWork monorepo"
-    email: "peter@everygoodwork.dev"
+    email: "peter@everygoodwork.online"
     projects:
       - statetree
       - orange

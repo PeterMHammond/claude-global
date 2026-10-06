@@ -1,0 +1,31 @@
+{
+  "crossSessionInbound": "accept",
+  "remoteControlAtStartup": false,
+  "statusLine": {
+    "type": "command",
+    "command": "input=$(cat); model=$(echo \"$input\" | jq -r '.model.display_name'); cwd=$(echo \"$input\" | jq -r '.workspace.current_dir'); if git -C \"$cwd\" rev-parse --git-dir > /dev/null 2>&1; then branch=$(git -C \"$cwd\" --no-optional-locks branch --show-current 2>/dev/null); [ -n \"$branch\" ] && left=$(printf \"%s [%s]\" \"$cwd\" \"$branch\") || left=\"$cwd\"; else left=\"$cwd\"; fi; width=\"${COLUMNS:-$(tput cols 2>/dev/null)}\"; width=\"${width:-80}\"; width=$((width - 6)); pad=$((width - ${#left} - ${#model})); [ \"$pad\" -lt 1 ] && pad=1; printf \"%s%*s%s\" \"$left\" \"$pad\" \"\" \"$model\""
+  },
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$CLAUDE_CONFIG_DIR/hooks/session-title.sh"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_CONFIG_DIR/hooks/comment-cap.sh\""
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -26,9 +26,9 @@ curl -s "https://api.cloudflare.com/client/v4/user/billing/history" \
   -H "Authorization: Bearer $CF_EGW_BILLING_READ" | jq .
 ```
 
-**Get billing profile** (account ID: `e2ecc897eaa02effed7cb3cbc4beca1fa`):
+**Get billing profile** (account ID: `e2ecc897eaa02efed7cb3cbc4beca1fa`):
 ```bash
-curl -s "https://api.cloudflare.com/client/v4/accounts/e2ecc897eaa02effed7cb3cbc4beca1fa/billing/profile" \
+curl -s "https://api.cloudflare.com/client/v4/accounts/e2ecc897eaa02efed7cb3cbc4beca1fa/billing/profile" \
   -H "Authorization: Bearer $CF_EGW_BILLING_READ" | jq .
 ```
 

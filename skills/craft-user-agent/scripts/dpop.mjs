@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// craft-user-agent — DPoP (RFC 9449) client for Craft's per-user `/user/agent`
+// craft-user-agent — DPoP (RFC 9449) client for Craft's per-user `/-/user/agent`
 // gateway. curl can drive every hop EXCEPT minting the DPoP proof: a proof is an
 // ES256 JWS whose signature must be raw r‖s (IEEE P1363), and openssl emits DER.
 // Node's WebCrypto signs P1363 directly — and is the same primitive a browser
@@ -21,7 +21,7 @@ import { readFileSync, writeFileSync, existsSync, mkdirSync, chmodSync } from "n
 import { homedir } from "node:os";
 import { dirname } from "node:path";
 
-const BASE = process.env.CRAFT_BASE || "https://craft.everygoodwork.dev";
+const BASE = process.env.CRAFT_BASE || "https://craft.everygoodwork.io";
 const STORE = process.env.CRAFT_USER_AGENT_STORE || `${homedir()}/.craft/user-agent.json`;
 const REDIRECT_URI = "http://localhost/cb";
 const subtle = crypto.subtle;
@@ -62,24 +62,28 @@ const FORM = "application/x-www-form-urlencoded";
 // ── request-otp ──────────────────────────────────────────────────────────────
 async function requestOtp(email) {
   if (!email) die("request-otp <email>");
-  const r = await fetch(`${BASE}/auth`, {
+  const r = await fetch(`${BASE}/-/auth`, {
     method: "POST",
     headers: { Origin: BASE, "Datastar-Request": "true", "content-type": "application/json" },
     body: JSON.stringify({ email }),
   });
-  console.log(`request-otp ${email} → ${r.status} (check the inbox for the 6-digit PIN)`);
+  const body = await r.text();
+  // The door answers 200 even when it refuses (an SSE patch carrying a craft-reject element).
+  if (!r.ok || /craft-reject/.test(body)) die(`request-otp refused (status ${r.status}): ${(body.match(/craft-reject[^>]*>([^<]{0,160})/) || [])[1] || body.slice(0, 200)}`);
+  if (!/code/i.test(body)) die(`request-otp: unexpected answer (status ${r.status}); is CRAFT_BASE the shell host and is the door /-/auth?`);
+  console.log(`request-otp ${email} → ${r.status}, PIN sent (check the inbox for the 6-digit PIN)`);
 }
 
 // ── login: OTP → cookie → PKCE consent → DPoP-bound token ────────────────────
 async function login(email, code) {
   if (!email || !code) die("login --email E --code NNNNNN");
 
-  const vr = await fetch(`${BASE}/auth`, {
+  const vr = await fetch(`${BASE}/-/auth`, {
     method: "POST",
     headers: { Origin: BASE, "Datastar-Request": "true", "content-type": "application/json" },
     body: JSON.stringify({ email, code }),
   });
-  const cookie = ((vr.headers.get("set-cookie") || "").match(/(__Host-)?craft_session=[^;]+/) || [])[0];
+  const cookie = ((vr.headers.get("set-cookie") || "").match(/(__Host-|__Secure-)?craft_session=[^;]+/) || [])[0];
   if (!cookie) die(`OTP verify failed (status ${vr.status}) — wrong/expired code?`);
 
   // Generate the holder keypair (the token will be bound to its thumbprint).
@@ -93,7 +97,7 @@ async function login(email, code) {
   // the code on a localhost redirect.
   const verifier = b64url(crypto.getRandomValues(new Uint8Array(32)));
   const challenge = await sha256url(verifier);
-  const cr = await fetch(`${BASE}/consent`, {
+  const cr = await fetch(`${BASE}/-/consent`, {
     method: "POST", redirect: "manual",
     headers: { Origin: BASE, Cookie: cookie, "content-type": FORM },
     body: form({ decision: "approve", client_name: "craft-user-agent", redirect_uri: REDIRECT_URI, code_challenge: challenge, code_challenge_method: "S256", state: b64url(crypto.getRandomValues(new Uint8Array(8))), scope: "read write publish" }),
@@ -108,7 +112,7 @@ async function login(email, code) {
   if (!authCode || !clientId) die(`consent failed (status ${cr.status}); location=${loc}`);
 
   // Token exchange WITH a DPoP proof → the issued token carries cnf.jkt.
-  const tokenUrl = `${BASE}/oauth/token`;
+  const tokenUrl = `${BASE}/-/oauth/token`;
   const proof = await makeProof(kp.privateKey, publicJwk, { htm: "POST", htu: tokenUrl });
   const tr = await fetch(tokenUrl, {
     method: "POST",
@@ -125,7 +129,7 @@ async function login(email, code) {
 // ── refresh: rotate the access token, preserving the bound key ───────────────
 async function refreshToken(store, privKey) {
   if (!store.refresh_token) return false;
-  const tokenUrl = `${store.base}/oauth/token`;
+  const tokenUrl = `${store.base}/-/oauth/token`;
   // /oauth/token enforces the RFC 9449 §8 server-nonce too — mirror callAgent: first proof sans nonce, re-sign with the challenged nonce, retry once.
   const attempt = async (nonce) => {
     const proof = await makeProof(privKey, store.public_jwk, { htm: "POST", htu: tokenUrl, nonce });
@@ -156,7 +160,7 @@ async function refreshToken(store, privKey) {
 
 // ── run: submit a worker to /user/agent, DPoP-signed ─────────────────────────
 async function callAgent(store, privKey, body) {
-  const agentUrl = `${store.base}/user/agent`;
+  const agentUrl = `${store.base}/-/user/agent`;
   const ath = await sha256url(store.access_token);
   // First attempt with no nonce — the server challenges with one (RFC 9449 §8),
   // then we re-sign (fresh jti) and retry once.

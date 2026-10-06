@@ -71,10 +71,10 @@ Example: `/review-release watchman 90bb00c27a2b02ddc3d9e6cce0fe7a4643c91948 agen
    and escalating one costs more than it saves.
    Style notes ride in the tag message.
 5. **On `sign`, and only then, what Peter does next**, appended to the block, as two options he
-   picks one of. The tag is the project's own scheme, not one shape for all: watchman is `v<date>`
-   with a `.N` suffix when the date already has one; craft and craft-core are the semver the bump
-   commit set (`v2.153.0`). `git ls-remote --tags origin 'v*'` says which shape the project uses —
-   read it before naming a tag, never assume the date form. `<text>` is `yes` when the diff touches a file the
+   picks one of. One version scheme for every project (Peter, 2026-10-05): the version the bump
+   commit set in `Cargo.toml` is the timestamp `YYYY.MMDD.HHMM`, and the tag is `v` + exactly that
+   string (`v2026.1005.1432`). Read the version from the bump commit, never derive a tag from today's
+   date or an ordinal; watchman's older `v<date>.N` tags stay as history only. `<text>` is `yes` when the diff touches a file the
    release ships as text (`deploy/`, the card's QML, `scripts/stage-release.sh`, recipes, keys),
    else `no`. For watchman:
    Every command sits alone in its own fenced block, no number, no prefix, nothing else on its

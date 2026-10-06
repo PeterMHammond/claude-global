@@ -236,9 +236,9 @@ Apply this section when:
 ```yaml
 accounts:
   egw:
-    account_id: "e2ecc897eaa02effed7cb3cbc4beca1fa"
+    account_id: "e2ecc897eaa02efed7cb3cbc4beca1fa"
     display_name: "EveryGoodWork"
-    email: "peter@everygoodwork.dev"
+    email: "peter@everygoodwork.online"
     projects:
       - x402
       - orange
@@ -283,11 +283,11 @@ curl -s "https://api.cloudflare.com/client/v4/user/billing/history" \
   -H "Authorization: Bearer $CF_EGW_BILLING_READ" | jq .
 
 # Get billing profile
-curl -s "https://api.cloudflare.com/client/v4/accounts/e2ecc897eaa02effed7cb3cbc4beca1fa/billing/profile" \
+curl -s "https://api.cloudflare.com/client/v4/accounts/e2ecc897eaa02efed7cb3cbc4beca1fa/billing/profile" \
   -H "Authorization: Bearer $CF_EGW_BILLING_READ" | jq .
 
 # Get subscriptions
-curl -s "https://api.cloudflare.com/client/v4/accounts/e2ecc897eaa02effed7cb3cbc4beca1fa/subscriptions" \
+curl -s "https://api.cloudflare.com/client/v4/accounts/e2ecc897eaa02efed7cb3cbc4beca1fa/subscriptions" \
   -H "Authorization: Bearer $CF_EGW_BILLING_READ" | jq .
 ```
 
@@ -319,7 +319,7 @@ fi
 When accessing different accounts, switch tokens:
 ```bash
 # For EGW account (billing_read)
-curl -s "https://api.cloudflare.com/client/v4/accounts/e2ecc897eaa02effed7cb3cbc4beca1fa/..." \
+curl -s "https://api.cloudflare.com/client/v4/accounts/e2ecc897eaa02efed7cb3cbc4beca1fa/..." \
   -H "Authorization: Bearer $CF_EGW_BILLING_READ"
 
 # For personal account (different token, different account_id)
@@ -489,11 +489,11 @@ When asked to check current expected bill:
    - Recent amounts (last 5 invoices)
    - Average expected: Show range based on trend
    - Outstanding amounts: List items to be paid
-5. **Important caveat**: API doesn't provide real-time current daily usage. For accurate "next bill" projection, direct user to: https://dash.cloudflare.com/e2ecc897eaa02effed7cb3cbc4beca1fa/billing/billable-usage
+5. **Important caveat**: API doesn't provide real-time current daily usage. For accurate "next bill" projection, direct user to: https://dash.cloudflare.com/e2ecc897eaa02efed7cb3cbc4beca1fa/billing/billable-usage
 
 ## Account Details (EveryGoodWork)
 
-- **Account ID**: `e2ecc897eaa02effed7cb3cbc4beca1fa`
+- **Account ID**: `e2ecc897eaa02efed7cb3cbc4beca1fa`
 - **Token Variable**: `CF_EGW_BILLING_READ`
 - **Available Tokens**: billing_read, workers_deploy, d1_admin, r2_admin
 - **Projects**: x402, orange, statetree, quickmeet, quickmeetai
@@ -501,7 +501,7 @@ When asked to check current expected bill:
 ## Quick Links
 
 **Real-time Billable Usage (Current Cycle)**:
-https://dash.cloudflare.com/e2ecc897eaa02effed7cb3cbc4beca1fa/billing/billable-usage
+https://dash.cloudflare.com/e2ecc897eaa02efed7cb3cbc4beca1fa/billing/billable-usage
 
 This dashboard shows:
 - Daily usage breakdown for current billing period
