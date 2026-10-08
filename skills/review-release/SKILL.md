@@ -9,7 +9,7 @@ The reviewer reads agent-written code, which is untrusted text, so it reads it h
 the review lab, with no key and no push. Its whole output is a report that names one commit. The
 signer on host ground tags that commit and nothing else, so the report and the tag cover one tree.
 
-Arguments: `<project>` (`watchman`, `craft`, `craft-core`), `<sha>` (the full 40-character sha the lab session
+Arguments: `<project>` (`watchman`, `craft`, `craft-core`, `craft-cli`), `<sha>` (the full 40-character sha the lab session
 reported; never a short one), optional `<branch>` (default `agent/release-*` holding that sha).
 Example: `/review-release watchman 90bb00c27a2b02ddc3d9e6cce0fe7a4643c91948 agent/release-2026-09-23.2` Refuse unless `WATCHMAN_LAB` is
 `Projects/review`: this runs in the review lab only.
@@ -34,7 +34,7 @@ Example: `/review-release watchman 90bb00c27a2b02ddc3d9e6cce0fe7a4643c91948 agen
    (the airlock presents the GET-only credential). Present: `git -C ~/<project> fetch origin`.
    A clone or fetch the airlock refuses (403, "not_allowlisted", an auth prompt) has one cause and
    one fix, and neither is here: the GET-only connector is not in place. Stop, explore nothing,
-   and print for Peter: `lab connect Projects/review gitlab.com gitlab-group "GET /everygoodwork/" "POST /everygoodwork/watchman.git/git-upload-pack/" "POST /everygoodwork/craft.git/git-upload-pack/" "POST /everygoodwork/craft-core.git/git-upload-pack/"`.
+   and print for Peter: `lab connect Projects/review gitlab.com gitlab-group "GET /everygoodwork/" "POST /everygoodwork/watchman.git/git-upload-pack/" "POST /everygoodwork/craft.git/git-upload-pack/" "POST /everygoodwork/craft-core.git/git-upload-pack/" "POST /everygoodwork/craft-agent.git/git-upload-pack/" "POST /everygoodwork/craft-cli.git/git-upload-pack/"`.
    Then `git -C ~/<project> checkout --detach <sha>`; a sha the fetch did not bring is a stop.
 2. **Scope, based on the last tag, NEVER on `origin/main`.**
    `base="$(git -C ~/<project> describe --tags --abbrev=0 --match 'v*' "<sha>^")"`. A trunk-based
