@@ -10,25 +10,33 @@ description: >
   with server-sent events. Also trigger for combining Datastar with Cloudflare
   Workers, Rust, worker-rs, Askama templates, WebSockets alongside Datastar,
   or Rocket components (ECharts, MapLibre, Globe.GL, canvas, QR codes, virtual
-  scroll, headless service components, typed props). Contains the correct
+  scroll, headless service components, typed props). Verified against
+  Datastar v1.0.4 (Rocket beta.2) source on 2026-10-07. Contains the correct
   mental model (HTML patches primary, signals the exception), the full data-*
-  attribute reference (21 free + 10 Pro), the full action reference (8 core +
-  3 Pro), the SSE wire format, Cloudflare-specific patterns, and the shipping
-  Rocket Pro API — `rocket(tag, { props, setup, onFirstRender, render, mode,
-  renderOnPropChange, manifest })` with fluent codec props, setup-context
-  helpers ($/$$/effect/cleanup/actions/emit/apply/observeProps), html/svg
-  tagged templates, data-if/data-for directives, data-ref:* refs, shadow DOM
-  modes, and component-local actions. Includes pointers into the local
-  datastar-pro source, datastar-examples corpus, and data-star.dev doc-site.
-  Covers WebSocket+SSE split architecture and the Datastar Inspector.
+  attribute reference (21 free + 10 Pro), the full action reference (9 core +
+  3 Pro), the SSE wire format with the eight real patch modes, the craft-core
+  worker-rs SSE design (compiled for wasm32, Response::from_stream, DO bridge,
+  no X-Accel-Buffering), and the shipping Rocket API — `rocket(tag, { props,
+  setup, onFirstRender, render, mode, renderOnPropChange, manifest })` with
+  fluent codec props, setup-context helpers ($/$$/effect/cleanup/actions/emit/
+  apply/observeProps), html/svg tagged templates, data-if/data-for directives,
+  data-ref:* refs, shadow DOM modes, and component-local actions. Includes
+  pointers into the local datastar-pro source, datastar-examples corpus, and
+  data-star.dev doc-site, plus references/ (cited core guide, Pro addendum,
+  changelog). Covers WebSocket+SSE split architecture and the Datastar Inspector.
 ---
 
 # Datastar Skill
 
 Datastar — hypermedia-first frontend framework (data-star.dev).
-Datastar core is currently v1.0.0-beta.11+. Datastar Pro is currently v1.0.0
-(Rocket beta.1 — JavaScript call-based API; the previous template-based
-`<template data-rocket:*>` API was alpha.7-only and has been removed).
+Datastar core and Pro are **v1.0.4** (local checkout `~/Projects/github/datastar-pro`
+at `8f64418`, 2026-09-21); Rocket is **beta.2** (JavaScript call-based API; the
+template-based `<template data-rocket:*>` API was alpha.7-only and is gone).
+
+Verified companions, read when a detail matters:
+- `references/datastar-guide.md` — core behavior cited to `file:line` in the checkout and to docs pages; recipes verbatim from the 41 example pages; compiled worker-rs code; pitfall list (section 14).
+- `references/datastar-pro-addendum.md` — every Pro attribute/action from plugin source, Inspector, bundler, runtime-verified bugs.
+- `references/CHANGELOG.md` — what changed in this skill on 2026-10-07 and what stays unverified.
 
 ---
 
@@ -37,10 +45,11 @@ Datastar core is currently v1.0.0-beta.11+. Datastar Pro is currently v1.0.0
 **HTML patches are the primary mechanism. Signals are the exception.**
 
 The server drives the DOM. Every meaningful state change starts as a backend
-render and arrives as a `datastar-patch-elements` SSE event. Idiomorph (when
-the server picks `mode: morph`, the historic default) or direct outerHTML/
-innerHTML replacement (when it picks `mode: outer`/`inner`) merges it into the
-existing DOM — preserving focus, scroll position, CSS transitions, input state.
+render and arrives as a `datastar-patch-elements` SSE event. The default mode
+`outer` (and `inner`) **morphs** it into the existing DOM, preserving focus,
+scroll position, CSS transitions and input state where IDs match; `replace`
+is the hard, state-resetting swap. There is no `morph` mode (it throws
+`PatchElementsInvalidMode`, patchElements.ts:18-27).
 
 Signals exist only for:
 - Transient UI state with no server representation (`_showModal`, `_dropdownOpen`)
@@ -63,49 +72,42 @@ When something in this skill conflicts with reality, the canonical sources are:
 
 | Source | Path / URL | What it is |
 |---|---|---|
-| **Pro source repo** | `~/Projects/github/datastar-pro/` | The licensed Pro code (private, owned). Working dir of this skill's home project. |
-| **Pro library** | `~/Projects/github/datastar-pro/library/src/pro/` | The 10 Pro attributes, 3 Pro actions, full Rocket runtime |
-| **Pro Rocket runtime** | `~/Projects/github/datastar-pro/library/src/pro/rocket/runtime.ts` | The `rocket()` function, `SetupContext`, `FirstUpdateContext`, `RenderContext` types — read this for ground-truth Rocket API |
-| **Pro Rocket codecs** | `~/Projects/github/datastar-pro/library/src/pro/rocket/codecs.ts` | Fluent codec API: `string.trim.maxLength(50)`, `number.clamp(0,100).step(5)`, `array(codec)`, `object({...})`, `oneOf(...)` |
-| **Pro Rocket conditional** | `~/Projects/github/datastar-pro/library/src/pro/rocket/conditional.ts` | `data-if`/`data-else-if`/`data-else` template directives |
-| **Pro Rocket for** | `~/Projects/github/datastar-pro/library/src/pro/rocket/for.ts` | `data-for` template directive |
-| **Pro Rocket template** | `~/Projects/github/datastar-pro/library/src/pro/rocket/template.ts` | `html` / `svg` tagged template literals |
-| **Datastar Inspector** | `~/Projects/github/datastar-pro/webcomponents/datastar-inspector/src/index.ts` | The `<datastar-inspector>` web component |
-| **Pro README** | `~/Projects/github/datastar-pro/README.md` | Top-level summary — links to docs and download |
-| **Rocket changelog** | `~/Projects/github/datastar-pro/CHANGELOG-ROCKET.md` | Per-release breaking changes (alpha → beta) |
-| **Examples corpus** | `~/Projects/EveryGoodWork/temp/datastar-examples/` | 41 example `.md` files mirrored from data-star.dev/examples |
-| **Live docs** | https://data-star.dev/ | Authoritative published docs and example pages |
+| **Pro source repo** | `~/Projects/github/datastar-pro/` at `8f64418` (v1.0.4) | The licensed Pro code (private, owned). Contains the free library too. The docs-site source is **not** here. |
+| **Free engine** | `library/src/engine/{engine,signals,errors,csp,consts}.ts` | Attribute parsing, signal store, error reasons, CSP nonce mode |
+| **Fetch action** | `library/src/plugins/actions/fetch.ts` | `@get/@post/…/@query`, options, retry, visibility, SSE parser, response dispatch |
+| **Morph** | `library/src/plugins/watchers/patchElements.ts` | The 8 modes, id matching, `data-ignore-morph`, `data-preserve-attr`, script execution |
+| **Free attributes** | `library/src/plugins/attributes/*.ts` | 17 attribute plugins |
+| **Pro plugins** | `library/src/pro/{attributes,actions}/` | 10 Pro attributes, 3 Pro actions |
+| **Rocket runtime** | `library/src/rocket/runtime.ts` | `rocket()`, `RocketDefinition` (:203-221), `SetupContext` (:107-143), lifecycle. Moved out of `pro/` in v1.0.4 |
+| **Rocket codecs** | `library/src/rocket/codecs.ts` | Fluent codec API: `string.trim.maxLength(50)`, `number.clamp(0,100).step(5)`, `array(codec)`, `object({...})`, `oneOf(...)`, `createCodec` |
+| **Rocket directives** | `library/src/rocket/{conditional,for,template}.ts` | `data-if/else-if/else`, `data-for`, `html`/`svg` tagged literals and `$$` rewriting |
+| **Bundles** | `library/src/bundles/*.ts` | `datastar`, `datastar-rocket`, `datastar-pro`, each ± `-aliased` (identical sources; alias is an esbuild `--define`) |
+| **Datastar Inspector** | `webcomponents/datastar-inspector/src/` | The `<datastar-inspector>` web component (needs no Pro bundle) |
+| **Rocket changelog** | `CHANGELOG-ROCKET.md` | beta.2 is current |
+| **Examples corpus** | `~/Projects/EveryGoodWork/temp/datastar-examples/` | 41 full-page scrapes of data-star.dev/examples with verbatim code |
+| **Production SSE** | `~/Projects/EveryGoodWork/craft-core/crates/craft-core-floor/src/{datastar,sse_event,sse_bridge}.rs` | The craft SSE builder, framing, and DO bridge this skill's worker-rs section describes |
+| **Rust SDK** | crate `datastar` 0.4.1 (`~/.cargo/registry/src/*/datastar-0.4.1/`) | Builds for wasm32 with `default-features = false` |
+| **Live docs** | https://data-star.dev/ | Published docs and example pages |
 
-**Pro source layout (file map):**
+**Source layout (file map, v1.0.4):**
 
 ```
-library/src/pro/
-├── attributes/
-│   ├── animate.ts             ← data-animate
-│   ├── customValidity.ts      ← data-custom-validity
-│   ├── matchMedia.ts          ← data-match-media
-│   ├── onRaf.ts               ← data-on-raf
-│   ├── onResize.ts            ← data-on-resize
-│   ├── persist.ts             ← data-persist
-│   ├── queryString.ts         ← data-query-string
-│   ├── replaceUrl.ts          ← data-replace-url
-│   ├── scrollIntoView.ts      ← data-scroll-into-view
-│   └── viewTransition.ts      ← data-view-transition
-├── actions/
-│   ├── clipboard.ts           ← @clipboard
-│   ├── fit.ts                 ← @fit
-│   └── intl.ts                ← @intl
-└── rocket/
-    ├── index.ts               ← public exports: { rocket, publishRocketManifests, createCodec, ... }
-    ├── runtime.ts             ← rocket() + custom-element class + lifecycle
-    ├── codecs.ts              ← prop codec registry (string, number, bool, date, json, js, bin, array, object, oneOf)
-    ├── template.ts            ← html`...` / svg`...` tagged literals
-    ├── conditional.ts         ← data-if / data-else-if / data-else
-    └── for.ts                 ← data-for
+library/src/
+├── engine/            engine.ts signals.ts errors.ts csp.ts consts.ts types.ts
+├── plugins/
+│   ├── actions/       fetch.ts peek.ts setAll.ts toggleAll.ts
+│   ├── attributes/    attr bind class computed effect indicator init jsonSignals
+│   │                  on onIntersect onInterval onSignalPatch ref show signals style text
+│   └── watchers/      patchElements.ts patchSignals.ts
+├── pro/
+│   ├── attributes/    animate customValidity matchMedia onRaf onResize persist
+│   │                  queryString replaceUrl scrollIntoView viewTransition
+│   └── actions/       clipboard.ts fit.ts intl.ts
+├── rocket/            index.ts runtime.ts codecs.ts template.ts conditional.ts for.ts
+├── bundles/           datastar(-aliased) datastar-core datastar-rocket(-aliased) datastar-pro(-aliased)
+└── utils/             dom math paths polyfills tags text timing view-transitions
 
-webcomponents/
-└── datastar-inspector/
-    └── src/index.ts           ← <datastar-inspector> dev tool (signals + events + persisted)
+webcomponents/datastar-inspector/src/   <datastar-inspector> (signals + events + persisted)
 ```
 
 ---
@@ -121,12 +123,13 @@ webcomponents/
 | | `/guide/backend_requests` | Signal transmission rules, SSE streaming, `@get`/`@post`/`@put`/`@patch`/`@delete` |
 | | `/guide/the_tao_of_datastar` | Design philosophy: backend owns state, sparing signals |
 | **Reference** | `/reference/attributes` | All 21 free + 10 Pro `data-*` attributes (canonical list — see attribute reference below) |
-| | `/reference/actions` | All 8 core + 3 Pro `@actions` (canonical list — see action reference below) |
+| | `/reference/actions` | All 9 core + 3 Pro `@actions` (canonical list — see action reference below) |
 | | `/reference/sse_events` | SSE wire format: `datastar-patch-elements`, `datastar-patch-signals` |
-| | `/reference/rocket` | **Rocket API reference (Pro)** — definitive spec for `rocket(tag, options)` |
+| | `/reference/rocket` | **Rocket API reference** — definitive spec for `rocket(tag, options)`; says "beta", no Pro badge (example pages do carry one) |
 | | `/reference/sdks` | Backend SDK list: Python, Go, TypeScript, Rust, PHP, Ruby, Java, Kotlin, .NET, Clojure, Scala, Haskell, Unison |
 | | `/reference/security` | XSS, CSP `unsafe-eval` requirement, sensitive-data warnings |
-| **Examples** | `/examples` | 27 free + 16 Pro example pages (mirror of `~/Projects/EveryGoodWork/temp/datastar-examples/`) |
+| **Examples** | `/examples` | 41 pages: 27 free + Match Media + 13 Rocket (Pro-badged) (mirror of `~/Projects/EveryGoodWork/temp/datastar-examples/`) |
+| **How-tos** | `/how_tos` | Exactly 6: `bind_keydown_events_to_specific_keys`, `keep_datastar_code_dry`, `load_more_list_items`, `poll_the_backend_at_regular_intervals`, `prevent_sse_connections_closing`, `redirect_the_page_from_the_backend` |
 | | `/examples/<slug>` | Individual example walkthrough |
 | **Essays** | `/essays` | Design rationale, "htmx Sucks", "V1 and Beyond", "Greedy Developer?", etc. |
 | **Pro** | `/pro` | Pro feature overview, pricing (Solo $349 / Team $1,299 / Enterprise) |
@@ -154,29 +157,29 @@ Read by feature when you need a concrete pattern reference.
 |---|---|
 | `active_search.md` | Real-time search with `data-bind` + debounced `@get()` |
 | `animations.md` | CSS transitions + View Transition API integration |
-| `bad_apple.md` | High-rate SSE streaming into a single element |
+| `bad_apple.md` | 30 fps signals-only stream (`_contents`, `_percentage`) into pre-bound elements |
 | `bulk_update.md` | Multi-select checkboxes + `@put()` for bulk ops |
 | `click_to_edit.md` | Inline edit-toggle without a separate route |
 | `click_to_load.md` | Pagination via click-triggered SSE fragments |
 | `custom_event.md` | `CustomEvent` between page and web components |
 | `custom_plugin.md` | Custom action + attribute plugin registration |
 | `dbmon.md` | High-frequency live-table SSE benchmark |
-| `delete_row.md` | Optimistic delete with `@delete()` + confirmation guard |
-| `edit_row.md` | Inline row edit form + `@patch()` |
+| `delete_row.md` | `confirm() && @delete()` with `_fetching` indicator; server confirms, nothing optimistic |
+| `edit_row.md` | Inline row edit, whole-table replace, `@patch()` save |
 | `event_bubbling.md` | Event delegation with `evt.target.closest(...)` |
 | `file_upload.md` | Base64-encoded file uploads in JSON body |
-| `form_data.md` | `contentType: 'form'` for multipart submissions |
+| `form_data.md` | `contentType: 'form'`: urlencoded form body, no signals (multipart only with `enctype`) |
 | `infinite_scroll.md` | `data-on-intersect` sentinel-driven pagination |
-| `inline_validation.md` | Real-time field validation via server round-trip |
+| `inline_validation.md` | `keydown__debounce.500ms` → `@post`, server re-renders the whole form |
 | `lazy_load.md` | `data-init` + `@get()` deferred fragment load |
 | `lazy_tabs.md` | Tab UI with on-demand panel fetch |
 | `on_signal_patch.md` | `data-on-signal-patch` reactive listeners |
-| `progress_bar.md` | SSE-streamed progress signal |
+| `progress_bar.md` | Streams a new SVG every 500 ms; `{openWhenHidden: true}` |
 | `progressive_load.md` | Sequential prioritized fragment loads |
 | `sortable.md` | SortableJS drag-drop + `@put()` reorder persist |
 | `svg_morphing.md` | SVG namespace + element morphing |
 | `templ_counter.md` | Server-rendered (Templ/Go) counter with signal updates |
-| `title_update.md` | `document.title` updates via signal patches |
+| `title_update.md` | Patch `<title>` with `selector title`; no signals, no head plugin |
 | `todomvc.md` | Full TodoMVC reference implementation |
 | `web_component.md` | Two-way binding with native web components |
 
@@ -186,7 +189,7 @@ Read by feature when you need a concrete pattern reference.
 |---|---|
 | `match_media.md` | `data-match-media:<name>` for responsive signal binding |
 
-### Pro Rocket components (13 files)
+### Rocket components (13 files, each Pro-badged on the site)
 
 | File | What it teaches |
 |---|---|
@@ -217,9 +220,7 @@ proxies in place these patterns rarely show up there. Client code often
 ### 1. Top-level replacement orphans deep-path subscriptions
 
 ```js
-// BROKEN — template binds to $_drag_state[id].x; client replaces the whole map.
-// Template effect is subscribed on the OLD inner proxy's `.x` — new proxy has no
-// listeners. Template never re-evaluates; items freeze at last rendered value.
+// BROKEN: replacing the whole map strands the effect on the OLD inner proxy; items freeze
 root._drag_state = { ...root._drag_state, [id]: { x: newX, y: newY, rz: 0 } };
 ```
 
@@ -336,16 +337,19 @@ No JSON API. No client-side routing. No state synchronization problem.
 ## Installation
 
 ```html
-<!-- Free / core via CDN -->
+<!-- Free / core via CDN, pinned -->
 <script type="module"
-  src="https://cdn.jsdelivr.net/gh/starfederation/datastar/bundles/datastar.js">
+  src="https://cdn.jsdelivr.net/gh/starfederation/datastar@v1.0.4/bundles/datastar.js">
 </script>
 
-<!-- Self-hosted (recommended for production) -->
+<!-- Self-hosted (recommended for production); keep the URL bare, see below -->
 <script type="module" src="/static/datastar.js"></script>
+
+<!-- Rocket components: datastar-rocket.js (core + Rocket) instead of datastar.js;
+     Pro: datastar-pro.js (core + Pro plugins + Rocket) -->
 ```
 
-Core bundle is ~12 KiB minified.
+Measured from source with esbuild (esm, minify): free 33.9 kB, Pro 72.6 kB, Inspector 64.5 kB.
 
 ## ⚠️ Critical: ES Module URL Identity — Bare Paths Only
 
@@ -470,7 +474,8 @@ Source repo: `~/Projects/github/datastar-pro/` (licensed, private)
 
 The Pro repo no longer ships pre-built JS — build from source. The Pro bundle
 includes the core framework, all 10 Pro attributes, all 3 Pro actions, and
-Rocket. There is no separate `datastar-pro-rocket.js`.
+Rocket. There is no separate `datastar-pro-rocket.js`; `datastar-rocket.ts` is
+free plugins + Rocket without the Pro plugins.
 
 ```bash
 cd ~/Projects/github/datastar-pro
@@ -491,9 +496,12 @@ For the Datastar Inspector web component, build separately:
 ```bash
 cd ~/Projects/github/datastar-pro
 npx esbuild webcomponents/datastar-inspector/src/index.ts --bundle --format=esm \
-  --minify --tsconfig=webcomponents/datastar-inspector/tsconfig.json \
+  --minify --loader:.html=text --tsconfig=webcomponents/tsconfig.json \
   --outfile=path/to/your/static/datastar-inspector.js
 ```
+
+`--loader:.html=text` is mandatory (it imports `template.html`); tsconfig lives at
+`webcomponents/tsconfig.json`. No `--define:ALIAS` needed for the Inspector.
 
 For pre-built bundles with no build step, sign in at
 https://data-star.dev/pro/download (GitHub OAuth) — Pro tier required.
@@ -502,7 +510,10 @@ https://data-star.dev/pro/download (GitHub OAuth) — Pro tier required.
 
 ## data-* Attribute Reference (Free / Core)
 
-21 attributes. Authoritative reference: `https://data-star.dev/reference/attributes`.
+21 attributes: 17 attribute plugins in `bundles/datastar.ts` plus four the engine and
+morph handle directly (`data-ignore`, `data-ignore-morph`, `data-preserve-attr`,
+`data-on-signal-patch-filter`). Authoritative reference:
+`https://data-star.dev/reference/attributes`; source-level detail in `references/datastar-guide.md` §3.
 
 ### Signal Management
 
@@ -551,10 +562,15 @@ https://data-star.dev/pro/download (GitHub OAuth) — Pro tier required.
 ```
 
 **Casing:** `data-signals:my-signal` → `$mySignal` (kebab → camelCase by default).
-Override with `__case.kebab|camel|snake|pascal` modifier.
+Override with `__case.kebab|camel|snake|pascal`. Honored by `signals bind computed
+indicator ref class on`; **ignored by `data-attr` and `data-style`** (attr.ts:13-33, style.ts:16-38 never call it).
 
-**Reserved:** Signal names cannot contain double underscores (`__` is the
-modifier prefix).
+**Reserved:** Signal names cannot contain `__` in the key form (`data-signals:a__b`
+splits on the modifier delimiter); `$a__b` in expressions and `data-bind="a__b"` work.
+
+**Later wins:** `data-signals` values defined later in the DOM override earlier ones.
+
+**Undefined reads create the signal as `''`** (signals.ts:592-599); declare signals first.
 
 ### DOM Reactivity
 
@@ -579,8 +595,7 @@ modifier prefix).
 <div data-style:color="$theme === 'dark' ? '#fff' : null">
 <div data-style="{'color': $fg, 'background-color': $bg}">
 
-<!-- Hide until Datastar initializes -->
-<div data-cloak data-signals="{show: false}">
+<!-- There is no data-cloak in v1.0.4; FOUC guard is data-show + style="display:none" -->
 
 <!-- Skip Datastar processing for this subtree (or just self with __self) -->
 <div data-ignore>third-party widget here</div>
@@ -591,8 +606,8 @@ modifier prefix).
      library (ECharts, MapLibre, Globe.GL, Three.js) owns its own DOM. -->
 <canvas data-ignore-morph></canvas>
 
-<!-- Preserve specific attributes during morph (preserves checked/focus/etc) -->
-<input data-preserve-attr="checked focus" />
+<!-- Read from the INCOMING element: send it on every patch -->
+<details open data-preserve-attr="open class">
 ```
 
 ### Event Handling
@@ -601,7 +616,7 @@ modifier prefix).
 <!-- Standard events -->
 <button data-on:click="$count++">
 <input data-on:input="$search = el.value">
-<form data-on:submit__prevent="@post('/submit')">  <!-- submit auto-prevents -->
+<form data-on:submit="@post('/submit')">  <!-- submit on a <form> auto-prevents; __prevent is redundant -->
 <div data-on:keydown__window="$key = evt.key">
 
 <!-- Event modifiers (double-underscore) -->
@@ -613,14 +628,15 @@ __outside              → fire only when target is outside this element
 __once                 → fire once only
 __passive              → passive listener (scroll perf)
 __capture              → use capture phase
-__debounce.500ms       → debounce
-__throttle.250ms       → throttle
-__delay.100ms          → defer
+__debounce.500ms       → debounce; tags .leading / .notrailing (after the duration)
+__throttle.250ms       → throttle; tags .noleading / .trailing (after the duration)
+__delay.100ms          → defer; durations are 500ms, 1s, or a bare number of ms
 __case.camel           → camelCase event name
 __viewtransition       → wrap handler in document.startViewTransition
 
 <!-- Loading indicator: true while in-flight, false when done -->
-<!-- IMPORTANT: data-indicator MUST appear BEFORE the @get/@post that uses it -->
+<!-- IMPORTANT: data-indicator MUST appear BEFORE the data-init @get that uses it -->
+<!-- An indicator named without _ is a normal signal and is SENT to the backend; prefer _loading -->
 <button
   data-indicator:loading
   data-on:click="@get('/slow')"
@@ -642,7 +658,7 @@ __viewtransition       → wrap handler in document.startViewTransition
 
 <!-- Periodic execution (default 1000ms) -->
 <div data-on-interval__duration.500ms="@get('/poll')"></div>
-<!-- Modifier: __leading runs immediately before waiting interval -->
+<!-- .leading fires immediately; also __viewtransition; no debounce/throttle -->
 
 <!-- React to ANY signal patching — pair with patch-filter -->
 <div data-on-signal-patch="console.log('signal changed:', patch)"
@@ -655,7 +671,7 @@ __viewtransition       → wrap handler in document.startViewTransition
 
 ## Actions Reference (Core)
 
-8 core actions. Authoritative reference: `https://data-star.dev/reference/actions`.
+9 core actions. Authoritative reference: `https://data-star.dev/reference/actions`.
 
 ### Synchronous helpers (3)
 
@@ -664,31 +680,34 @@ __viewtransition       → wrap handler in document.startViewTransition
 @setAll(value, {include, exclude}) Set all matching signals to value
 @toggleAll({include, exclude})     Flip all matching boolean signals
 ```
+These default to excluding nothing, so they do touch `_` signals (signals.ts:761).
 
-### Backend actions (5)
+### Backend actions (6)
 
 ```
 @get('/url', options)             GET — signals as ?datastar=<json> query param
 @post('/url', options)            POST — signals as JSON body
 @put('/url', options)
 @patch('/url', options)
-@delete('/url', options)
+@delete('/url', options)          DELETE — signals in the query like GET
+@query('/url', options)           QUERY — safe, idempotent read with signals in the BODY
 ```
 
 All backend actions:
-- Send the `Datastar-Request: true` header automatically
+- Send `Datastar-Request: true` and `Accept: text/event-stream, text/html, application/json`; your `headers` merge last and can override
 - Include all non-`_`-prefixed signals by default (filter via `filterSignals`)
-- Auto-detect response Content-Type and dispatch accordingly (see "Response Content Types" below)
+- Auto-detect response Content-Type and dispatch accordingly (see "Response Content Types" below); `204` is a valid empty reply
+- `@query` is not supported by Rocket 0.5 on the Rust side; axum handles it
 
 ### Backend action options (full reference)
 
 ```js
 @post('/url', {
   // Transmission
-  contentType: 'json' | 'form',          // default 'json'; 'form' = multipart/form-data
-  filterSignals: { include: /regex/, exclude: /regex/ },  // default exclude /(^_|\._)/
-  selector: '#my-form',                  // CSS selector for form serialization
-  payload: { /* override entire body */ }, // bypass signal transmission
+  contentType: 'json' | 'form',          // 'form': urlencoded (multipart only with enctype), NO signals
+  filterSignals: { include: /regex/, exclude: /regex/ },  // default exclude /(^|\.)_/
+  selector: '#my-form',                  // form to serialize; default null = closest form
+  payload: { /* override entire body */ }, // bypass signal transmission (json mode only)
 
   // Headers
   headers: { 'Authorization': 'Bearer ' + $token },
@@ -705,22 +724,38 @@ All backend actions:
 
   // Cancellation
   requestCancellation: 'auto' | 'cleanup' | 'disabled' | abortController,
-  // 'auto'    = new request on same element cancels old
-  // 'cleanup' = also cancel on attribute removal
+  // 'auto'    = a new request with the same method + URL string aborts the old one
+  // 'cleanup' = 'auto' plus abort when the element/attribute is cleaned up
   // 'disabled' = no auto-cancellation
 })
 ```
 
-**Element-scoped cancellation:** Concurrent requests on *different* elements
-do not cancel each other. Same-element requests do (under `'auto'`).
+**Cancellation key is method + raw URL** (fetch.ts:51-72), not the element.
+Two elements firing `@get('/x')` cancel each other under `'auto'`; set
+`'disabled'` when they must run concurrently.
 
-**Fetch lifecycle events** — every backend action dispatches a `datastar-fetch`
-CustomEvent on the triggering element with `detail.type` of:
+**Retry (fetch.ts:587-692):** `'auto'` retries only when `fetch` throws (network),
+up to `retryMaxCount` with backoff, and does so even under `'never'`; non-200 is
+never retried under `'auto'`; a cleanly finished stream does **not** reconnect
+unless `retry: 'always'`. `id:` is echoed as `last-event-id`; `retry:` sets the base interval.
+
+**Visibility:** `openWhenHidden` is `false` for `@get` only. On tab hide the request
+is aborted and re-issued (signals re-read) on show. Leave it unless the stream holds
+server-side position (see guide §8.8).
+
+**Fetch lifecycle events** — dispatched on `document` (not the element) as
+`datastar-fetch` with `detail = {type, el, argsRaw}`; listen with
+`data-on:datastar-fetch` anywhere. `detail.type`:
 - `started` — request initiated
 - `finished` — request completed
-- `error` — network/processing error
+- `error` — status ≥ 400 or network error (`argsRaw.status`)
 - `retrying` — retry attempt
 - `retries-failed` — all retries exhausted
+
+**Two paths never resolve the fetch promise** (source-read, fetch.ts:160-163, 651-652):
+a `contentType: 'form'` request whose `reportValidity()` fails, and a
+`text/javascript` response. `started` fired, `finished` never does, so a
+`data-indicator` stays `true`. Validate before calling the action; answer with SSE, not JS.
 
 ---
 
@@ -749,27 +784,36 @@ data: elements <div>new item</div>
 
 **Patch modes:**
 
-| mode | behavior |
-|------|----------|
-| `outer` (default) | Replace target's outer HTML. Idiomorph diff applied — preserves focus/scroll/state where IDs match. |
-| `inner` | Morph the innerHTML — outer tag preserved. |
-| `replace` | Hard outerHTML replace, no morph. |
-| `prepend` | Insert before first child. |
-| `append` | Insert after last child. |
-| `before` | Insert before target. |
-| `after` | Insert after target. |
-| `remove` | Remove target from DOM (omit `data: elements`, or send `<x></x>` placeholder). |
+| mode | morph? | behavior |
+|------|--------|----------|
+| `outer` (default) | yes | Morph the whole target element; preserves focus/scroll/input state where IDs match. |
+| `inner` | yes | Morph the target's children; outer tag preserved. |
+| `replace` | no | Hard outerHTML replace; state reset; `data-*` attributes applied fresh. |
+| `prepend` / `append` | no | Insert as first / last child of the target. |
+| `before` / `after` | no | Insert as sibling of the target. |
+| `remove` | no | Remove the target; `selector` required, `data: elements` omitted. |
 
-**Selector:** If omitted, Datastar matches by top-level element ID.
+Exactly these eight (patchElements.ts:18-27); anything else throws
+`PatchElementsInvalidMode`. `morph` is not a mode.
+
+**Selector:** Without one, only `outer`/`replace` work and each top-level element
+must carry an `id` that exists in the DOM (missing → `PatchElementsNoTargetsFound`
+warning, skipped). Any other mode without `selector` throws `PatchElementsExpectedSelector`.
 **ID stability is critical** — place IDs on top-level patch targets AND on
 internal stateful elements (inputs, scrollable containers) so morph preserves
-their state across patches.
+their state across patches. Persistent-id match also requires the same tag name.
 
 **Namespace** (optional): `data: namespace svg` or `data: namespace mathml`
-when patching XML-namespaced content.
+when patching XML-namespaced content (or wrap the payload in `<svg>` yourself).
 
-**View transitions:** `data: useViewTransition true` enables the View
-Transition API for animated patches.
+**View transitions:** `data: useViewTransition true` (must be exactly `true`)
+and optional `data: viewTransitionSelector #main` (default `document`).
+
+**Scripts:** a `<script>` in patched content runs once per **new** node. Under
+`outer`/`inner`, a script that soft-matches an existing `<script>` is morphed in
+place and not re-run; `append` it or give it a fresh `id`.
+
+**`</html>`, `</head>`, `</body>` in the payload** patch the document, head or body.
 
 Multiple elements in one event:
 ```
@@ -790,7 +834,10 @@ data: signals {loading: false, count: 42}
 
 - Set a signal value to `null` to **remove** it.
 - `data: onlyIfMissing true` — only patch signals that don't exist yet
-  (useful for initial seed data without overwriting user state).
+  (useful for initial seed data without overwriting user state); `null` entries are then ignored.
+- Objects merge recursively (RFC 7386); **arrays replace wholesale**; an object
+  patched onto a non-object path resets it to `{}` first (signals.ts:722-749).
+- The value is `JSON.parse`d first, then evaluated as a JS object literal.
 
 ### Execute Script (Server-Driven JS)
 
@@ -821,81 +868,133 @@ Use this for one-shot operations (URL updates after save, localStorage cleanup,
 focus management). Do NOT use for reactive/continuous state — use
 `data-replace-url` for that (see Pro Attributes section).
 
+**Craft's script-free variant** (`craft-core-floor/src/datastar.rs`, `effect_element`):
+`sse::execute_script(js)` and `sse::redirect(url)` append
+`<div hidden data-effect="try { … } finally { el.remove() }"></div>` with the JS
+attribute-escaped (and the URL JSON-encoded with `</` broken). It runs through
+Datastar's evaluator, so CSP nonce mode covers it, it removes itself even when the
+code throws, and a later morph cannot re-execute it. Prefer it in new code.
+
 ---
 
 ## Response Content Types
 
 | Content-Type | What Datastar does |
 |---|---|
-| `text/event-stream` | Parse and apply SSE events (primary) |
-| `text/html` | Morph top-level elements by ID. Honors `datastar-selector` / `datastar-mode` / `datastar-use-view-transition` response headers. |
-| `application/json` | Merge as signal patch (RFC 7396) |
-| `text/javascript` | Execute as script |
+| `text/event-stream` | Parse and apply SSE events (primary). Events not named `datastar-*` are dropped; `:` comments ignored. |
+| `text/html` | One patch-elements by ID. Honors `datastar-selector` / `datastar-mode` / `datastar-namespace` / `datastar-use-view-transition` headers. |
+| `application/json` | One patch-signals (RFC 7386 merge); `datastar-only-if-missing` header |
+| `text/javascript` | Appended to `<head>` and executed; `datastar-script-attributes` header. **Fetch promise never resolves** (indicator sticks). Avoid. |
+| `204` | Valid empty reply |
+| anything else | Fed to the SSE parser, yields nothing |
 
 ---
 
 ## Cloudflare Workers / Rust (worker-rs) Implementation
 
-**No official Rust worker-rs SDK.** Build a minimal helper.
+Everything below compiles for `wasm32-unknown-unknown` with `worker 0.8.6`
+(`http`, `axum`), `futures 0.3`, `askama 0.15` and was tested on 2026-10-07
+(guide §13). The production implementation is **craft-core-floor**; new projects
+depend on it or copy its shape rather than hand-rolling a `format!` helper.
 
-### SSE Helper (put in cf-tools)
+### The reference: `craft_core::datastar` (craft-core-floor/src/datastar.rs)
 
 ```rust
-pub struct Sse;
+use craft_core::datastar::{sse, PatchMode, Namespace, SseEncoding, create_sse_response};
 
-impl Sse {
-    pub fn patch_elements(html: &str) -> String {
-        format!("event: datastar-patch-elements\ndata: elements {}\n\n", html)
-    }
+// Finite reply: build a message, convert to Response (Content-Type + Cache-Control set)
+let msg = sse::message()
+    .event(sse::patch_elements(row_html).selector("#rows").mode(PatchMode::Append))
+    .event(sse::patch_signals(&MySignals { count: 3 })?)
+    .build();
+let response: worker::Response = msg.try_into()?;
 
-    pub fn patch_elements_mode(selector: &str, mode: &str, html: &str) -> String {
-        format!(
-            "event: datastar-patch-elements\ndata: selector {}\ndata: mode {}\ndata: elements {}\n\n",
-            selector, mode, html
-        )
-    }
+// Accumulate conditionally; build() is Err(NoEvents) on an empty accumulator
+let mut acc = sse::accumulator();
+acc.retry(craft_core::sse_bridge::RECONNECT_RETRY);
+acc.add_event(sse::patch_elements(view));
+if changed { acc.add_event(sse::patch_signals_raw(r#"{"dirty":false}"#).always_patch()); }
+let wire = acc.build()?.to_sse_string();
 
-    pub fn patch_signals(json: &str) -> String {
-        format!("event: datastar-patch-signals\ndata: signals {}\n\n", json)
-    }
+sse::execute_script("history.replaceState({}, '', '/v2/7')");  // script-free, self-removing
+sse::redirect("/guide").delay(Duration::from_secs(3));            // escaped URL, setTimeout arm
+```
 
-    pub fn remove(selector: &str) -> String {
-        format!(
-            "event: datastar-patch-elements\ndata: selector {}\ndata: mode remove\ndata: elements <x></x>\n\n",
-            selector
-        )
-    }
+Design points the types enforce:
+- `html.lines()` → one `data: elements <line>` per line. Multi-line Askama output is safe.
+- `Selector` newtype replaces control characters, so a selector can never inject an SSE line.
+- Only non-default fields are emitted: `mode` when ≠ `outer`, `namespace` when ≠ `html`, `useViewTransition`/`onlyIfMissing` when true.
+- `id:`/`retry:` once per message, before the first event (legal SSE; the `datastar` crate puts them per event).
+- `SseMessageBuilder<Empty>` has no `build()`: a message with zero events cannot be spelled.
+- `execute_script`/`redirect` emit `<div hidden data-effect="try {…} finally { el.remove() }">`, never a `<script>`.
 
-    /// Apply required headers to a Response
-    pub fn apply_headers(resp: &mut Response) -> worker::Result<()> {
-        let h = resp.headers_mut();
-        h.set("Content-Type", "text/event-stream")?;
-        h.set("Cache-Control", "no-cache")?;
-        h.set("X-Accel-Buffering", "no")?;  // prevent CF edge buffering
-        Ok(())
-    }
+### Long-lived stream
+
+`worker::Response::from_stream` (worker 0.8.6 `response.rs:97`):
+
+```rust
+pub fn from_stream<S>(stream: S) -> Result<Self>
+where S: TryStream + 'static, S::Ok: Into<Vec<u8>>, S::Error: Into<Error>
+```
+
+No `Send`/`Unpin`; an `mpsc::Receiver<worker::Result<String>>` is accepted directly.
+Two production shapes:
+
+1. **craft** (`sse_bridge.rs`): the Worker opens a WebSocket to the DO stub and
+   `sse_bridge(stub, req, leg)` yields each DO text frame as a pre-framed SSE string
+   via `async_stream::stream!`, with a keepalive every 25 s (`KEEPALIVE_INTERVAL`):
+   viewer legs get `datastar-patch-signals {}` (`heartbeat()`, visible to Datastar and
+   the Inspector), machine legs get `: keep-alive`; two unanswered radio checks end the
+   stream. The DO never holds the HTTP response, so it can hibernate. Callers:
+   `SseEncoding::negotiate(accept_encoding)` then `create_sse_response(stream, encoding)`
+   (`craft/src/routes/{health_events,user_events}.rs`).
+2. **carm** (`cf_datastar.rs` `ConnectionManager`): senders held inside the DO, `try_send`
+   per subscriber, `is_disconnected()` prunes. Minimal form, compiled:
+
+```rust
+use futures::channel::mpsc;
+use worker::{Response, Result};
+
+pub struct Subscriber { tx: mpsc::Sender<Result<String>> }
+
+impl Subscriber {
+    pub fn send(&mut self, event: String) -> bool { self.tx.try_send(Ok(event)).is_ok() }
+}
+
+pub fn open_stream() -> Result<(Subscriber, Response)> {
+    let (tx, rx) = mpsc::channel::<Result<String>>(64);
+    let mut response = Response::from_stream(rx)?;
+    let headers = response.headers_mut();
+    headers.set("Content-Type", "text/event-stream")?;
+    headers.set("Cache-Control", "no-cache")?;
+    Ok((Subscriber { tx }, response))
 }
 ```
 
-### Streaming Response Pattern
+Gzip (craft): `ResponseBuilder::new().with_encode_body(EncodeBody::Manual).from_stream(...)`
+with `flush()` after every event, `Content-Encoding: gzip`, `Vary: Accept-Encoding`.
+Open streams with `retry: 1000` so a dropped network reconnects fast; a cleanly
+closed stream never reconnects on its own.
+
+### Hand-rolled fallback (12 lines, compiles unchanged)
 
 ```rust
-use futures_util::stream;
-
-async fn handle_sse(_req: Request, _ctx: RouteContext<()>) -> Result<Response> {
-    let stream = stream::unfold(0u32, |i| async move {
-        if i >= 10 { return None; }
-        let html = format!("<div id=\"counter\">{}</div>", i);
-        let event = Sse::patch_elements(&html);
-        // yield delay here if needed
-        Some((Ok::<Vec<u8>, Error>(event.into_bytes()), i + 1))
-    });
-
-    let mut resp = Response::from_stream(stream)?;
-    Sse::apply_headers(&mut resp)?;
-    Ok(resp)
+pub fn sse(kind: &str, fields: &[(&str, &str)]) -> String {
+    let mut out = format!("event: datastar-{kind}\n");
+    for (name, value) in fields {
+        for line in value.lines() {
+            out.push_str(&format!("data: {name} {line}\n"));
+        }
+    }
+    out.push('\n');
+    out
 }
+// sse("patch-elements", &[("selector", "#list"), ("mode", "append"), ("elements", &row)])
 ```
+
+Byte-identical to the `datastar` 0.4.1 crate for the same HTML. That crate also
+builds for wasm32 (`default-features = false`); its types have no `Display`, so
+serialize with `PatchElements::new(html).into_datastar_event().to_string()`.
 
 ### Reading Signals
 
@@ -906,21 +1005,25 @@ struct MySignals {
     #[serde(default)] page: u32,
 }
 
-// POST/PUT/PATCH/DELETE — signals in JSON body
+// POST/PUT/PATCH/QUERY — signals in the JSON body
 let signals: MySignals = req.json().await.unwrap_or_default();
 
-// GET — signals in ?datastar=<json> query param
+// GET/DELETE — signals in ?datastar=<json>
 let raw = req.url()?.search_params().get("datastar").unwrap_or_default();
 let signals: MySignals = serde_json::from_str(&raw).unwrap_or_default();
+// contentType: 'form' requests carry NO signals; read the form body instead.
+// Datastar requests carry `Datastar-Request: true`.
 ```
 
 ### Cloudflare-Specific Notes
 
-- `X-Accel-Buffering: no` is critical — prevents CF edge from buffering the SSE stream
+- **Do not send `X-Accel-Buffering: no`.** Cloudflare strips it ("Removed response headers",
+  https://developers.cloudflare.com/fundamentals/reference/http-headers/) and Workers stream
+  `ReadableStream` bodies by default. carm and craft-core still set it; it is dead weight.
 - No `Connection: keep-alive` needed — CF manages this
-- CPU time limits don't count I/O wait — long SSE streams are fine
-- No `async_stream!` macro (Tokio dep) — use `futures_util::stream::unfold`
-- DO as SSE hub: one DO instance manages subscribers for a channel, broadcasts patches to all
+- CPU time limits don't count I/O wait — long SSE streams are fine; a held stream is one request for `cpu_ms`
+- `async-stream` builds on wasm32 (no tokio dependency); craft uses `stream!` for the bridge
+- DO as SSE hub: either hold senders in the DO (carm) or bridge DO→Worker over a WebSocket so the DO can hibernate (craft)
 
 ---
 
@@ -1074,7 +1177,7 @@ The loop:
 - v1.0.0-RC.1 (Jul 2026): added a `__trusted` modifier as opt-in
 - v1.0.0-RC.5 (Aug 2026): **reversed the default and removed the modifier** —
   `data-on:*` now runs regardless of `isTrusted` provenance
-- RC.8+ (current): no isTrusted filtering anywhere in the framework
+- RC.8 through v1.0.4 (verified: zero `isTrusted` hits in `library/src`): no isTrusted filtering anywhere in the framework
 
 The framework's stance: **handlers should be idempotent** (single textContent write per input
 event = fine; `el.select()` firing `selectionchange` that the page reacts to = not fine), or
@@ -1117,6 +1220,7 @@ data: elements <div id="item-42">New item</div>
 
 Source: `~/Projects/github/datastar-pro/library/src/pro/attributes/`.
 Authoritative docs: `https://data-star.dev/reference/attributes` (Pro section).
+Full per-plugin syntax, modifiers, defaults and cites: `references/datastar-pro-addendum.md`.
 
 ### `data-animate` — animate attribute values over time
 
@@ -1139,8 +1243,11 @@ Authoritative docs: `https://data-star.dev/reference/attributes` (Pro section).
   `inelastic`, `outelastic`, `inoutelastic`, `inback`, `outback`, `inoutback`,
   `inbounce`, `outbounce`, `inoutbounce`, `ingolden`, `outgolden`, `inoutgolden`
 - `__delay.<time>`, `__loop`, `__pingpong`
+- Defaults: duration 1000ms, ease `linear`, delay 0; absent attribute starts at `0<suffix>`
 
 **Gotchas:**
+- **Bug (v1.0.4):** `inbounce`, `inoutbounce`, `inoutgolden` throw `TypeError` on the first
+  frame (camelCase lookup against lowercase keys). Use `outbounce`/`ingolden`/`outgolden`.
 - Animated attributes must share the same suffix (cannot animate `0px` → `100%`)
 - Uses `requestAnimationFrame`
 - Cancels in-flight animations on interruption
@@ -1164,8 +1271,8 @@ Only works on `<input>`, `<select>`, `<textarea>` — throws on other elements.
 <div data-match-media:is-mobile="max-width: 768px">...</div>
 ```
 
-Signal name follows kebab→camel rule. Auto-wraps query in parentheses if absent.
-Cleanup resets the signal to `null`.
+Value is raw media-query text, not an expression (quotes stripped, `()` added if
+absent). Signal name kebab→camel; `__case.snake|pascal` overrides. Cleanup sets `null`.
 
 ### `data-on-raf` — run on every requestAnimationFrame
 
@@ -1183,7 +1290,8 @@ Modifiers: timing modifiers + `__viewtransition`. Coalesces signal writes via
 ```
 
 Uses `ResizeObserver` (observes the element, not the viewport — distinct from
-`data-match-media`). Modifiers: `__debounce`, `__throttle`, `__viewtransition`.
+`data-match-media`). Modifiers: `__delay`, `__debounce`, `__throttle`, `__viewtransition`
+(same set as `data-on-raf`; time tag first, e.g. `__debounce.100ms.leading`).
 
 ### `data-persist` — sync signals to localStorage / sessionStorage
 
@@ -1198,9 +1306,9 @@ Uses `ResizeObserver` (observes the element, not the viewport — distinct from
 <div data-persist__session="{include: /^prefs/, exclude: /password/}"></div>
 ```
 
-Loads from storage on first render, then writes reactively. Logs to
-`console.error` on JSON parse failure. Use `__session` modifier for
-sessionStorage (default is localStorage).
+Loads the whole stored object on apply (`mergePatch`, filter NOT applied on load),
+then writes `filtered()` reactively. Logs to `console.error` on JSON parse failure.
+Use `__session` modifier for sessionStorage (default is localStorage).
 
 ### `data-query-string` — sync URL query params ↔ signals
 
@@ -1216,8 +1324,9 @@ sessionStorage (default is localStorage).
 ```
 
 Type coerces `'true'`/`'false'`/numeric strings. Supports nested paths
-(`foo.bar.baz` ↔ `$foo.bar.baz`). Doesn't update URL during browser
-back/forward navigation.
+(`foo.bar.baz` ↔ `$foo.bar.baz`). Only `__history` registers a `popstate` handler
+(and skips URL writes during it); `__filter` omits falsy values. Writes rebuild the
+whole query string, so non-signal params (`utm_*`) are dropped.
 
 ### `data-replace-url` — reactively update URL via history.replaceState
 
@@ -1231,12 +1340,12 @@ back/forward navigation.
 
 Source `replaceUrl.ts`: `requirement: { key: 'denied', value: 'must' }` — no
 colon key allowed, value expression is required. Wrapped in `effect()` — fires
-reactively on every morph/dependency change.
+on every dependency-signal change; relative URLs resolve against `location.href`.
 
 **When to use:** continuous URL sync (filters, pagination, tab state).
 **When NOT to use:** one-shot URL updates after save — use the self-removing
-script pattern instead. `data-replace-url` fires on every morph, not just the
-triggering event.
+script pattern instead. `data-replace-url` fires on every dependency change, not
+just the triggering event.
 
 ### `data-scroll-into-view` — scroll target into viewport
 
@@ -1252,7 +1361,8 @@ triggering event.
 - Vertical: `__vstart`, `__vcenter` (default), `__vend`, `__vnearest`
 - Extras: `__focus` — calls `.focus()` after scroll
 
-**Side effect:** sets `tabindex="0"` if not present (so `__focus` works).
+**Side effect:** sets `tabindex="0"` when `el.tabIndex` is falsy (an existing `-1`
+is kept). Runs once when the attribute is applied; not reactive.
 
 ### `data-view-transition` — set CSS view-transition-name
 
@@ -1261,8 +1371,8 @@ triggering event.
 ```
 
 Sets `style="view-transition-name: ..."` reactively. Pairs with CSS
-`::view-transition-old(name)` / `::view-transition-new(name)`. Warns on
-browsers that don't support the View Transitions API.
+`::view-transition-old(name)` / `::view-transition-new(name)`. Silent no-op on
+browsers without the View Transitions API; a falsy value never clears the name.
 
 ---
 
@@ -1278,8 +1388,8 @@ Source: `~/Projects/github/datastar-pro/library/src/pro/actions/`.
 ```
 
 If `isBase64` is true, decodes via `atob` before writing. Throws if
-`navigator.clipboard` unavailable (insecure context, etc.). Returns a Promise
-(usually fire-and-forget).
+`navigator.clipboard` unavailable (insecure context, etc.). Returns `undefined`:
+the `writeText` promise is dropped, so rejections are unhandled.
 
 ### `@fit(v, oldMin, oldMax, newMin, newMax, shouldClamp?, shouldRound?)` — range remap
 
@@ -1294,7 +1404,7 @@ Linear interpolation between two ranges. **No clamping by default** — pass
 `shouldClamp=true` to constrain. Internally `inverseLerp` then `lerp`.
 Like Processing's `map()` / p5's `map()`.
 
-### `@intl(type, value, options?, locales?)` — format via JS Intl APIs
+### `@intl(type, value, options, locales?)` — format via JS Intl APIs
 
 ```html
 <!-- Number -->
@@ -1303,8 +1413,8 @@ Like Processing's `map()` / p5's `map()`.
 <!-- Date -->
 <span data-text="@intl('datetime', $when, {dateStyle: 'medium'})"></span>
 
-<!-- Relative time (note `unit` in options) -->
-<span data-text="@intl('relativeTime', -3, {unit: 'day'}, 'en-US')"></span>
+<!-- Relative time: unit MUST be an array; a string yields RangeError -->
+<span data-text="@intl('relativeTime', -3, {unit: ['day']}, 'en-US')"></span>
 
 <!-- Plural, list, displayNames -->
 <span data-text="@intl('pluralRules', $count)"></span>
@@ -1313,8 +1423,10 @@ Like Processing's `map()` / p5's `map()`.
 ```
 
 **Supported `type` values:** `'datetime'`, `'number'`, `'pluralRules'`,
-`'relativeTime'` (requires `unit` in options), `'list'`, `'displayNames'`
-(requires `type` in options).
+`'relativeTime'` (requires `unit: [...]` in options), `'list'`, `'displayNames'`
+(`type` defaults to `language`). `options` is positionally required for
+`relativeTime` and `displayNames` (omitting it throws `TypeError`); pass `{}`
+or `undefined` for the others.
 
 Default locale = `navigator.language` or `'en-US'`. Throws on unknown type
 or invalid date.
@@ -1337,24 +1449,26 @@ events, and persisted storage in real time.
 ```
 
 It mounts a panel (in shadow DOM) and listens at the document level for:
-- `datastar-fetch` — SSE fetch lifecycle (started/finished/error/retry)
-- `datastar-signal-patch` — signal-tree updates
-- `storage` — local/session storage changes
+- `datastar-fetch` — SSE tab shows only event types starting `datastar-`
+  (`datastar-patch-elements`, `datastar-patch-signals`); lifecycle
+  `started/finished/error/retrying/retries-failed` are filtered out
+- `datastar-signal-patch` — signals tab is rebuilt by replaying these events, so
+  load the Inspector script before Datastar or the initial state is missed
+- `storage` — persisted-data tab, keys derived by scanning DOM `data-persist*` attrs
 
-### Attributes / observed state
+Tabs: current signals, signal-patch events, SSE events, persisted data. Hovering a
+signal path highlights elements whose `data-*` values reference `$path`.
 
-| Attribute / property | What it controls |
-|---|---|
-| `max-events-visible` | Cap on event list length (default 20). Prevents memory bloat. |
-| `expanded`, `open`, `tab` | Panel visibility / active tab (persisted in sessionStorage under `datastar-inspector-state`). |
-| `currentSignalsIncludeFilter` / `currentSignalsExcludeFilter` / `currentSignalsUseExactMatch` / `currentSignalsTableView` | Signal-list filtering and view options |
-| `persistedDataIncludeFilter` / `persistedDataExcludeFilter` / `persistedDataUseExactMatch` / `persistedDataTableView` / `persistedDataUseSessionStorage` | Persist-data filtering and view options |
-| `signalPatchEventCount` / `sseEventCount` | Live counters |
-| `currentSignals` / `persistedData` | Live snapshots |
-| `highlightedElements` | DOM elements highlighted for debugging |
+### Attributes
 
-**Gotcha:** Listens at document level — not isolated to a component subtree.
-There's only one inspector per page; it sees everything.
+Only `max-events-visible` is observed (default 20, must be > 0). Everything else
+(expanded/open/tab, filters, table view, storage toggle) is internal UI state
+persisted in `sessionStorage['datastar-inspector-state']`, not settable from HTML.
+
+**Needs no Pro bundle:** imports nothing from the library; works off public document
+events with the free bundle. **Bug (v1.0.4):** persisted-key scan matches
+`data-persist-<key>` but the attribute is `data-persist:<key>`, so only the default
+`datastar` key is counted. Listens at document level; sees everything.
 
 ---
 
@@ -1363,26 +1477,41 @@ There's only one inspector per page; it sees everything.
 ### Bundler (`/pro/bundler`)
 
 Web tool (auth-required) to generate custom Pro bundles containing only the
-plugins you need. Reduces ship size for projects that don't use the full
-attribute/action surface. Sign in with GitHub OAuth on data-star.dev.
+plugins you need. Sign in with GitHub OAuth on data-star.dev. Locally: copy
+`library/src/bundles/datastar-core.ts` (engine + signals API, no plugins) and add
+`import '@plugins/...'` / `import '@pro/...'` lines; re-export `@rocket` last.
+
+| Bundle (`library/src/bundles/`) | Free plugins | Pro plugins | Rocket |
+|---|---|---|---|
+| `datastar.ts` / `datastar-aliased.ts` | yes | no | no |
+| `datastar-rocket.ts` / `-aliased.ts` | yes | no | yes |
+| `datastar-pro.ts` / `-aliased.ts` | yes | yes | yes |
+
+Aliasing is purely the esbuild `--define:ALIAS` value: `*-aliased.ts` sources are
+identical to their twins. `ALIAS="star"` renames every attribute to `data-star-*`
+(including `data-ignore`); `$signal` and `@action` syntax is unchanged. Sizes
+(esm+minify): free 33.9 kB, pro 72.6 kB.
 
 ### Stellar CSS
 
-A lightweight CSS framework (alpha as of this writing) shipped under the Pro
-license. Provides a configurable design system in CSS variables — no build
-step required. Docs are gated behind GitHub OAuth at `data-star.dev/pro` →
-"Stellar CSS".
+Not in the checkout: no CSS, no `stellar` files; README only links
+`data-star.dev/pro#stellar-css` (GitHub OAuth gated). Nothing documentable from source.
 
 ---
 
-## Rocket — Pro Custom Elements (shipping JS-call API)
+## Rocket — Custom Elements (shipping JS-call API, beta.2)
 
-Rocket is Datastar Pro's web-component framework. Components are registered by
-calling `rocket(tag, options)` from JavaScript — there is **no template-based
+Rocket is Datastar's web-component framework. It ships in the free
+`datastar-rocket.js` bundle (published from the MIT `starfederation/datastar`
+repo) and inside `datastar-pro.js`; it is NOT in plain `datastar.js`. Source
+lives in the commercial `datastar-pro` repo; the docs example pages still badge
+it Pro and the reference says beta.2. Components are registered by calling
+`rocket(tag, options)` from JavaScript — there is **no template-based
 `<template data-rocket:*>` syntax** (that was alpha.7-only and removed in
 beta.1).
 
-Source of truth: `~/Projects/github/datastar-pro/library/src/pro/rocket/runtime.ts`.
+Source of truth: `~/Projects/github/datastar-pro/library/src/rocket/runtime.ts`
+(v1.0.4, commit 8f64418; all `runtime.ts:N` refs below are against that tree).
 
 ### Mental Model
 
@@ -1420,15 +1549,14 @@ rocket('my-counter', {
   // Public API — typed via fluent codecs. Becomes observed attributes.
   props: ({ number, string, oneOf }) => ({
     start: number.min(0).default(0),
-    label: string.trim().default('Count'),
+    label: string.trim.default('Count'),
     size: oneOf('sm', 'md', 'lg').default('md'),
   }),
 
-  // Render mode — 'light' (default), 'open' (open shadow), 'closed' (closed shadow)
+  // Render mode — 'open' (DEFAULT, open shadow), 'closed' (closed shadow), 'light'
   mode: 'light',
 
-  // Re-render on prop change? Default: true. false skips re-render
-  // (useful for library-owned DOM where setup/effects do all updates).
+  // Re-render on prop change (default true); false for library-owned DOM
   renderOnPropChange: true,
 
   // Optional ref constructors — typecheck refs.input as HTMLInputElement
@@ -1440,20 +1568,19 @@ rocket('my-counter', {
     events: [{ name: 'count-changed', kind: 'custom-event', bubbles: true, composed: true }],
   },
 
-  // Per-instance setup. Runs on connectedCallback BEFORE first render.
-  // ALL imperative wiring goes here.
+  // Per-instance setup, on connectedCallback BEFORE first render; all imperative wiring here
   setup({ props, $, $$, effect, cleanup, actions, action,
           emit, emitCancellable, observeProps, overrideProp,
           defineHostProp, apply, adoptStyles, host, render }) {
     // Initialize component-local signals — creates $$count for templates
     $$.count = props.start
 
-    // React to specific prop changes (without re-running every render)
-    observeProps((oldProps, newProps) => {
-      $$.count = newProps.start
+    // React to specific prop changes — fn receives (props, changes), not (old, new)
+    observeProps((props, changes) => {
+      $$.count = changes.start
     }, 'start')
 
-    // Local action — callable as `actions.increment()` or `data-on:click="@increment()"`
+    // Local action — callable from templates as `data-on:click="@increment()"` only
     action('increment', () => { $$.count += 1 })
 
     // Reactive side effect — auto-cleaned on disconnect
@@ -1496,20 +1623,27 @@ Usage anywhere on the page:
 <my-counter data-attr:start="$pageCount"></my-counter>
 ```
 
-### `RocketDefinition` — full shape (verbatim from runtime.ts)
+### `RocketDefinition` — full shape (verbatim from runtime.ts:203-221)
 
 ```ts
-type RocketDefinition<Defs, Refs> = {
-  refs?: Refs                                           // Record<name, ElementCtor>
-  props?: (codecs: CodecRegistry) => Defs               // FUNCTION receiving codec registry
-  manifest?: { slots?: [...], events?: [...] }
-  setup?: (context: SetupContext<Props>) => void
-  onFirstRender?: (context: FirstUpdateContext<Props, Refs>) => void
-  render?: (context: RenderContext<Props>) => RocketRenderValue
+type RocketDefinition<
+  Defs extends PropDefs = PropDefs,
+  Refs extends RefCtors = RefCtors,
+> = {
+  refs?: Refs
+  props?: (codecs: CodecRegistry) => Defs
+  manifest?: RocketManifestMeta
+  setup?: (context: SetupContext<InferProps<Defs>>) => void
+  onFirstRender?: (context: FirstUpdateContext<InferProps<Defs>, Refs>) => void
+  render?: RocketRender<InferProps<Defs>>
   mode?: 'open' | 'closed' | 'light'
   renderOnPropChange?:
     | boolean
-    | ((context: { host, props, changes }) => boolean)
+    | ((context: {
+        host: RocketHostWithProps<InferProps<Defs>>
+        props: InferProps<Defs>
+        changes: Partial<InferProps<Defs>>
+      }) => boolean)
 }
 ```
 
@@ -1553,42 +1687,74 @@ props: ({ string, number, bool, date, json, js, bin, array, object, oneOf }) => 
 })
 ```
 
-**Available codecs (from `library/src/pro/rocket/codecs.ts`):**
+**Available codecs (from `library/src/rocket/codecs.ts`; getters take NO parens):**
 
-| Codec | Methods |
-|---|---|
-| `string` | `.trim`, `.upper`, `.lower`, `.kebab`, `.camel`, `.snake`, `.pascal`, `.title`, `.prefix(s)`, `.suffix(s)`, `.maxLength(n)`, `.default(v)` |
-| `number` | `.min(n)`, `.max(n)`, `.clamp(lo, hi)`, `.step(s, base?)`, `.round`, `.ceil(d?)`, `.floor(d?)`, `.fit(inMin, inMax, outMin, outMax, clamped?, rounded?)`, `.default(v)` |
-| `bool` | `.default(v)` |
-| `date` | `.default(v)` |
-| `json` | `.default(v)` |
-| `js` | `.default(v)` (parses JS-literal-ish strings; trailing commas + unquoted keys ok; revives `function() {...}` strings) |
-| `bin` | `.default(v)` (base64 ↔ `Uint8Array`) |
-| `array(codec)` / `array(c1, c2, ...)` | `.default(v)` (homogeneous array OR tuple based on arity) |
-| `object({ field: codec, ... })` | `.default(v)` |
-| `oneOf(v1, v2, ...)` or `oneOf(c1, c2, ...)` | `.default(v)` (literal enum or codec union) |
+| Codec | Chain | Default when attr absent | codecs.ts |
+|---|---|---|---|
+| `string` | getters `.trim .upper .lower .kebab .camel .snake .pascal .title`; `.prefix(s) .suffix(s) .maxLength(n) .default(v)` | `''` | 50-63, 256-343 |
+| `number` | `.min(n) .max(n) .clamp(lo, hi) .step(s, base=0) .ceil(d=0) .floor(d=0) .fit(inMin, inMax, outMin, outMax, clamped=true, rounded=false) .default(v)`; getter `.round` | `0` (non-finite → 0) | 65-82, 346-416 |
+| `bool` | `.default(v)` | `false`; true for `true`, `''`, `'true'`, `1`, `'1'` | 84-86, 419-437 |
+| `date` | `.default(v)` | `new Date()` (also on invalid input) | 88-90, 440-469 |
+| `json` | `.default(v)` | `{}` (parse failure/null → `{}`) | 92-94, 472-495 |
+| `js` | `.default(v)` (JSON first, else JS evaluation; revives `function() {...}` strings) | `{}` | 96-98, 498-527 |
+| `bin` | `.default(v)` (base64 ↔ `Uint8Array`) | empty `Uint8Array` | 100-102, 530-556 |
+| `array(codec)` | `.default(v)` | `[]` | 104-106, 559-584 |
+| `array(c1, c2, ...)` | `.default(v)` (tuple when arity ≥ 2) | per-position defaults | 108-110, 587-621 |
+| `object({ field: codec })` | `.default(v)` | each key's codec default | 112-114, 624-664 |
+| `oneOf(v1, v2, ...)` / `oneOf(c1, c2, ...)` | `.default(v)` (literal enum or codec union) | first entry | 116-118, 753-817 |
+| `createCodec({ decode, encode })` | `.default(v)` (custom; exported from the bundle) | `decode(undefined)` | 222-224 |
 
 All codecs also support `.docs({ description, label, control, placeholder })`
-to feed manifests for IDE/tooling.
+to feed manifests for IDE/tooling. `.default(v)` takes a value or factory;
+object defaults are `structuredClone`d per instance (codecs.ts:163-178).
 
-### Setup Context (verbatim from runtime.ts:99–146)
+### Setup Context (verbatim from runtime.ts:107-143, comments stripped)
 
-The `setup()` function receives a context object with these properties:
+```ts
+type SetupContext<Props extends Record<string, any>> = {
+  props: Props
+  $: Record<string, any>
+  $$: SetupSignal
+  effect(fn: () => void): () => void
+  apply(root: HTMLOrSVG | ShadowRoot, merge?: boolean): void
+  adoptStyles(host: HTMLElement, ...styles: string[]): void
+  cleanup(fn: () => void): void
+  emit: SetupEmit
+  emitCancellable: SetupEmitCancellable
+  actions: Record<string, (...args: any[]) => any>
+  action(name: string, fn: RocketAction<Props>): void
+  observeProps(
+    fn: PropObserver<Props>,
+    ...propNames: Array<keyof Props & string>
+  ): () => void
+  overrideProp<Name extends keyof Props & string>(
+    name: Name,
+    getter?: PropOverrideGetter<Props, Name>,
+    setter?: PropOverrideSetter<Props, Name>,
+  ): void
+  defineHostProp(name: string, descriptor: HostPropDescriptor): void
+  render: SetupRender<Props>
+  host: RocketHostWithProps<Props>
+}
+```
+
+`SetupSignal = (<T>(name: string, initialValue: T) => T) & AnyRecord` (runtime.ts:49);
+`PropObserver = (() => void) | ((props, changes: Partial<Props>) => void)` (runtime.ts:103-105).
 
 | Property | Type | What it does |
 |---|---|---|
-| `props` | `Props` | Decoded prop values (read-only here). |
+| `props` | `Props` | Decoded prop values. A PLAIN object (runtime.ts:693-695), not a signal: reads inside `effect()` do not subscribe; react with `observeProps`. |
 | `$` | `Record<string, any>` | Datastar's global signal root. Read/write `$.foo` to share state across the page. |
 | `$$` | `SetupSignal` (callable proxy) | Component-local signals. `$$.count = 0` declares a signal; templates read `$$count`. Function values become computed signals: `$$.total = () => $$.count + 1`. |
 | `effect(fn)` | `() => void` | Reactive effect. Auto-disposed on disconnect; returns explicit dispose fn. |
 | `cleanup(fn)` | `void` | Register a teardown callback (fires on disconnect). |
 | `apply(root, merge?)` | `void` | Apply Datastar attributes to a subtree. `merge` defaults to `true`. Use after imperatively inserting Datastar-flavored DOM. |
 | `adoptStyles(host, ...styles)` | `void` | Inject CSS into shadow root (via `adoptedStyleSheets`) or light DOM (via `<style>` prepend). |
-| `emit(name)` / `emit(name, detail, options?)` | `boolean` | Dispatch bubbling+composed `Event` (no detail) or `CustomEvent` (with detail). |
-| `emitCancellable(...)` | `boolean` | Like `emit` but cancellable; returns whether default was prevented. |
-| `actions` | `Record<string, fn>` | Proxy to the GLOBAL action registry (call `actions.foo(arg)` to invoke `@foo`). |
-| `action(name, fn)` | `void` | Register a COMPONENT-LOCAL action. Shadows globals for this instance. The fn receives `{ host, props, state, el, evt }, ...args`. |
-| `observeProps(fn, ...names)` | `() => void` | Run `fn(oldProps, newProps)` when any of the named props change (or on every prop change if no names given). Returns disposer. |
+| `emit(name)` / `emit(a, b, …)` / `emit(name, detail, options?)` | `void` | Dispatch bubbling+composed `Event` (no detail, one or many names) or `CustomEvent` (with detail). |
+| `emitCancellable(...)` | `boolean` | Like `emit` but cancellable; returns `dispatchEvent`'s result (false if default prevented). |
+| `actions` | `Record<string, fn>` | Proxy to the GLOBAL action registry ONLY (`actions.foo(arg)` invokes `@foo`). It does not see `action(name, fn)` locals (runtime.ts:1453-1478). |
+| `action(name, fn)` | `void` | Register a COMPONENT-LOCAL action, reachable from templates as `@name(...)`. Resolution: this instance → ancestor Rocket hosts → global registry (runtime.ts:904-949). The fn receives `{ host, props, state, el, evt }, ...args`. |
+| `observeProps(fn, ...names)` | `() => void` | Run `fn(props, changes)` when any of the named props change (or on every prop change if no names given). `changes` holds only the changed keys. Returns disposer. |
 | `overrideProp(name, getter?, setter?)` | `void` | Customize prop accessors — useful for live controls (sliders) where the displayed value differs from the stored value. |
 | `defineHostProp(name, descriptor)` | `void` | Add arbitrary properties/methods to the host element beyond declared props. |
 | `render(overrides?)` | `void` | Manually trigger a re-render. |
@@ -1620,12 +1786,13 @@ or signal writes in `render`. Side effects belong in `setup()` and `effect()`.
 
 | mode | how to enable | style scoping | slot semantics |
 |---|---|---|---|
-| **Light** (default) | `mode: 'light'` (or omit) | Inherits page CSS. Uses scoped `data-rocket-host` attribute. | Uses Rocket's manual slot-projection: matching host children move into rendered `<slot>` positions. |
-| **Open shadow** | `mode: 'open'` | Native shadow isolation; external JS can reach in. | Native web-component slots. |
+| **Open shadow** (default) | `mode: 'open'` (or omit) | Native shadow isolation; external JS can reach in. | Native web-component slots. |
 | **Closed shadow** | `mode: 'closed'` | Native shadow isolation; external JS can't reach in. | Native web-component slots. |
+| **Light** | `mode: 'light'` | Inherits page CSS; no Rocket style scoping at all. | Rocket's manual slot-projection: matching host children move into rendered `<slot>` positions (only when render output contains a `<slot>`). |
 
-**Light DOM is the default and is right for most cases.** It inherits page CSS,
-participates in normal document styling, and lets server-rendered content
+Default is `'open'` (`options?.mode ?? 'open'`, runtime.ts:566,589,1228-1234).
+**Light DOM is right for most cases but must be opted into.** It inherits page
+CSS, participates in normal document styling, and lets server-rendered content
 (forms, SVG children) work naturally.
 
 Use shadow DOM when the component needs true style isolation — a drop-in
@@ -1663,11 +1830,15 @@ setup({ $$, effect }) {
 }
 ```
 
-**Escape the scope** (write a page-level signal from inside a Rocket template)
-with `__root` modifier on the expression:
+**Escape the scope.** Only `$$` tokens are rewritten; `$foo` in any expression
+inside a Rocket template is already page scope (`data-on:click="$globalCounter++"`).
+The `__root` modifier exists only for signal-NAME attributes — `data-bind`,
+`data-computed`, `data-indicator`, `data-ref`, `data-signals` — whose key would
+otherwise be prefixed (template.ts:372-381,506-522,555-563):
 
 ```html
-<button data-on:click__root="$.globalCounter++">Bump page counter</button>
+<input data-bind:query__root />          <!-- binds page $query, not $$query -->
+<div data-ref:panel__root></div>         <!-- page-level Datastar ref, not refs.panel -->
 ```
 
 ### Refs — `data-ref:<name>`
@@ -1701,16 +1872,17 @@ setup({ $$, action }) {
   })
 }
 
-// In render():
-// <button data-on:click="@snap(10)">Snap to 10</button>
+// render(): <button data-on:click="@snap(10)">Snap to 10</button>
 ```
 
-From setup or other actions: `actions.snap(10)`.
+`actions.snap(10)` does NOT work — `actions` is the global registry only. To
+share logic between setup and a local action, keep a plain function and call
+it from both. A nested Rocket child may call this action via `@snap()`.
 
 ### Lifecycle
 
 `connectedCallback`:
-1. Decode props via codec chain — written to `_rocket.<tag>.<instanceId>.*`
+1. Decode props via codec chain into a plain `#props` object (constructor, runtime.ts:884-893); props never enter the signal tree
 2. Build setup context (with `$`, `$$`, `effect`, `cleanup`, `actions`, etc.)
 3. Run `setup(context)` — declare signals, register effects, observers, actions
 4. Run first `render({...})` into the mount root (shadow root or host)
@@ -1724,12 +1896,12 @@ On prop change (when `renderOnPropChange !== false`):
 3. Re-render through `render({...})`
 4. Re-apply Datastar attributes across the rendered tree
 
-`disconnectedCallback`:
-1. All `cleanup(fn)` callbacks run (in registration order)
-2. All `effect()` returned disposers fire
-3. Component-local actions deregistered
-4. Global actions called via `actions.*` get their cleanup map released
-5. Instance state removed from signal tree (`_rocket.<tag>.<id>` cleared)
+`disconnectedCallback` (runtime.ts:1579-1599):
+1. Instance state removed from signal tree (`_rocket.<tag>.<id>` set to null)
+2. Global actions called via `actions.*` get their cleanup map released
+3. `data-if`/`data-for` controllers torn down
+4. `cleanup(fn)` callbacks and `effect()` disposers run — one list, registration order
+5. Refs cleared, prop observers and component-local actions deregistered
 
 ### The Architectural Rule (Adopted Loadout-Wide)
 
@@ -1784,7 +1956,7 @@ rocket('loadout-canvas', {
       // …every listener / observer / effect disposed
     })
   },
-  render: ({ html }) => html`<slot></slot>`,
+  // No render: any render (even `<slot>`) morphs host children into clones, stranding listeners
 })
 ```
 
@@ -1797,14 +1969,14 @@ rocket('loadout-canvas', {
 </loadout-canvas>
 ```
 
-Zero visible render (just `<slot></slot>`), but owns gestures, viewport,
-paint-order sync, and an exhaustive `cleanup`. Pattern-verifiable: every
-resource registered in `setup` has a matching disposer.
+Zero render (omit `render`; see the light-DOM clone trap, fix 1), but owns
+gestures, viewport, paint-order sync, and an exhaustive `cleanup`.
+Pattern-verifiable: every resource registered in `setup` has a matching disposer.
 
 ### Pattern: Library Integration (ECharts, MapLibre, Globe.GL, QR, Canvas)
 
 When a third-party library owns its own DOM, render the container **once** and
-let the library drive updates via `effect()`. Set `renderOnPropChange: false`
+let the library drive updates via `observeProps()`. Set `renderOnPropChange: false`
 so prop changes don't re-render and stomp the library's DOM.
 
 ```js
@@ -1821,41 +1993,42 @@ rocket('qr-code', {
   refs: { canvas: HTMLCanvasElement },
   renderOnPropChange: false,                    // library owns the canvas
   render: ({ html }) => html`<canvas data-ref:canvas></canvas>`,
-  onFirstRender({ refs, effect, props }) {
-    effect(() => {
+  onFirstRender({ refs, observeProps, props }) {
+    const renderQR = () =>
       qrCreator.render({
         text: props.text, ecLevel: props.errorLevel,
         fill: props.colorDark, background: props.colorLight,
         size: props.size,
       }, refs.canvas)
-    })
+    renderQR()
+    observeProps(renderQR)    // no names = every prop change
   },
 })
 ```
 
-Every reactive prop read inside `effect()` becomes a dependency — change any
-of `props.text`, `props.size`, `props.errorLevel`, `props.colorDark`,
-`props.colorLight` and the effect re-runs, pushing the new config into the
-live canvas.
+`props` is a plain object, not a signal source (runtime.ts:693-695,987-998), so
+`effect(() => props.x)` runs once and never again; `observeProps(fn, ...names)`
+is the prop-change hook. `effect()` is for `$$`/`$` signals.
 
-The ECharts variant typically splits into two effects: one for `option`
-(calls `chart.setOption(...)` without re-init) and one for `theme` (calls
-`echarts.init(...)` fresh because theme is baked into the instance).
+The ECharts variant typically splits into two observers: `observeProps(fn, 'option')`
+(calls `chart.setOption(...)` without re-init) and `observeProps(fn, 'theme')`
+(calls `echarts.init(...)` fresh because theme is baked into the instance).
 
 ### Pattern: Stringify-and-Compare Guard
 
-Reactive proxies can fire an `effect()` on every read even when the value is
-deep-equal. For expensive syncs (geometry updates, layer rebuilds, GeoJSON),
-diff the JSON string before reacting:
+`#setProp` is `Object.is`-guarded (runtime.ts:991), but a `json`/`array` prop
+decodes to a NEW object on every attribute write, so `observeProps` fires even
+when the content is deep-equal. For expensive syncs (geometry updates, layer
+rebuilds, GeoJSON), diff the JSON string before reacting:
 
 ```js
 let prevArcs = ''
-effect(() => {
+observeProps(() => {
   const next = JSON.stringify(props.arcs ?? [])
   if (next === prevArcs) return
   prevArcs = next
   globe.arcsData(JSON.parse(next))
-})
+}, 'arcs')
 ```
 
 Apply this for any signal where equality isn't cheap (arrays, nested objects,
@@ -1872,7 +2045,7 @@ rocket('star-field', {
   refs: { canvas: HTMLCanvasElement },
   renderOnPropChange: false,
   render: ({ html }) => html`<canvas data-ref:canvas></canvas>`,
-  onFirstRender({ refs, props, effect, cleanup }) {
+  onFirstRender({ refs, props, observeProps, cleanup }) {
     let aid = 0
     let ro
 
@@ -1882,11 +2055,8 @@ rocket('star-field', {
     }
     const reset = () => { /* resize + seed based on props.starCount */ }
 
-    // effect auto-runs and re-runs whenever starCount changes
-    effect(() => {
-      props.starCount     // explicit read = subscription
-      reset()
-    })
+    // props is a plain object: observeProps, not effect, re-seeds on change
+    observeProps(reset, 'starCount')
 
     // Kick off animation loop once
     reset()
@@ -1944,7 +2114,7 @@ rocket('virtual-scroll', {
     bufferSize: number.min(1).default(50),
   }),
   refs: { viewport: HTMLDivElement },
-  setup({ props, host, refs }) {
+  onFirstRender({ props, host, refs }) {   // refs exist here, never in setup
     async function loadBlock(startIndex) {
       const response = await fetch(props.url, {
         method: 'POST',
@@ -1984,14 +2154,14 @@ render: ({ html, props }) => html`
   <div data-computed:trimmed-query="$$query.trim()"></div>
   <div data-indicator:loading></div>
 
-  <!-- Loops — must be on <template> -->
-  <template data-for="item in $$items" data-key="item.id">
+  <!-- Loops — must be on <template>; rows reconcile by index (no data-key in beta.2) -->
+  <template data-for="item in $$items">
     <li data-text="item.name"></li>
   </template>
 
   <template data-for="row, j in $$rows">
     <template data-for="cell, k in row.cells">
-      <span data-text="${j} + ':' + ${k} + ' = ' + cell.value"></span>
+      <span data-text="j + ':' + k + ' = ' + cell.value"></span>
     </template>
   </template>
 
@@ -2072,19 +2242,20 @@ and never reach it. CSS keeps working because it matches the clone by class /
 selector. Hover-works-but-click-doesn't is the diagnostic signature.
 
 **Why it happens (lifecycle):**
-- `setup` runs BEFORE `render` (`runtime.ts:1501-1502`).
+- `setup` runs BEFORE `render` (`runtime.ts:1512-1513`).
 - `setup` queries `host.querySelector(...)` — finds the original descendant
   still attached to the host. Listener attaches there.
 - `#render` runs slot projection: `content.append(...this.childNodes)` MOVES
-  the host's children into a fragment (`runtime.ts:1140`), then
-  `slot.replaceWith(...children)` puts them where the slot was.
-- `morph(host, fragment, 'inner')` runs (`runtime.ts:1167`).
+  the host's children into a fragment (`runtime.ts:1159`), then
+  `slot.replaceWith(...children)` puts them where the slot was. (With no
+  `<slot>` in the output the children are simply morphed away.)
+- `morph(host, fragment, 'inner')` runs (`runtime.ts:1186`).
 - At this point the host is empty (children just moved out), so morph's
   `ctxPersistentIds` is empty — no IDs are shared between old and new.
 - `morphChildren` falls through to `document.importNode(newChild, true)` —
-  a deep clone (`patchElements.ts:422-427`). Even subtrees that contain IDs
-  in their descendants take the line-411 branch, which `document.createElement`s
-  a fresh wrapper and recurses.
+  a deep clone (`patchElements.ts:444`). Even subtrees that contain IDs
+  in their descendants take the `ctxIdMap` branch (`patchElements.ts:431-441`),
+  which `document.createElement`s a fresh wrapper and recurses.
 - Either way: the clone is in the live host; the original (with the listener)
   is in detached storage.
 
@@ -2116,8 +2287,8 @@ the sibling's listener is stranded on the orphan.
 **Fixes, in order of preference:**
 
 1. **Wrapper component with no chrome → OMIT `render` entirely.** Rocket's
-   `#render` early-returns at `runtime.ts:1082-1085` when `render` is absent;
-   the host's children are never morphed; `apply()` at `runtime.ts:1526`
+   `#render` early-returns at `runtime.ts:1117-1120` when `render` is absent;
+   the host's children are never morphed; `apply()` at `runtime.ts:1531`
    still binds Datastar's `data-*` attrs across the original tree. Imperative
    listeners attached in `setup` survive because their nodes were never
    moved. This is the right shape for any Rocket component whose only job
@@ -2154,7 +2325,7 @@ the sibling's listener is stranded on the orphan.
    ```
 
 3. **Imperative wiring in `onFirstRender`, not `setup`.** `onFirstRender`
-   runs AFTER `#render` (`runtime.ts:1547`), so `host.querySelector` finds
+   runs AFTER `#render` (`runtime.ts:1552`), so `host.querySelector` finds
    the live clone. Listeners attached there work. Use this when you need
    imperative gesture wiring AND a rendered chrome together.
 
@@ -2175,11 +2346,6 @@ the sibling's listener is stranded on the orphan.
 - `window.addEventListener(...)` / `document.addEventListener(...)` — those
   nodes aren't part of any component's morph surface.
 - `effect(() => $.*)` — signal subscriptions don't depend on DOM identity.
-
-**What's ALWAYS safe from anywhere:**
-- `window.addEventListener(...)` / `document.addEventListener(...)` — those nodes aren't cloned.
-- `effect(() => $.*)` — signal subscriptions are unaffected by DOM cloning.
-- Dispatching `CustomEvent` to `document` / `window` and listening via `data-on:my-event__window`.
 
 ### Pattern: Conditional Branches (Mount/Unmount vs data-show)
 
@@ -2217,12 +2383,11 @@ preserve (scroll position, form input, in-flight timers).
 
 ### Light vs Shadow — When to Pick
 
-|                  | light (default) | shadow (`open` / `closed`) |
+|                  | light (`mode: 'light'`) | shadow (`open` default / `closed`) |
 |------------------|---|---|
-| style scope      | scoped via `data-rocket-host` attr + selector rewrite | native shadow isolation |
+| style scope      | none — `adoptStyles` prepends a raw `<style>` (runtime.ts:1064-1067) | native shadow isolation (`adoptedStyleSheets`) |
 | page CSS         | applies | does NOT apply |
 | slot content     | host children projected into `<slot>` (with `$$` rescoping) | native shadow slots |
-| `:host` in style | rewritten to scope selector | native |
 | when to pick     | inline widgets, forms, counters, controls that want native page feel; components hosting projected SVG | fully isolated design-system widgets; library integrations where library styles shouldn't leak |
 
 For library integrations (ECharts, Globe, MapLibre) shadow mode is often right
@@ -2256,6 +2421,23 @@ as props and reacts:
 ```
 
 **4. Component fetches its own SSE stream** — the virtual-scroll pattern (above).
+
+**5. Server patches INSIDE a Rocket host.** Every host carries `data-scope-children`;
+after a morph, `datastar-scope-children` fires and Rocket rescopes raw `$$`
+expressions in the patched children before Datastar evaluates them
+(runtime.ts:751-802,1202-1205,1224; patchElements.ts:259-262,590-706).
+
+### beta.2 surface (not covered above)
+
+- Interpolations resolve via DOM markers, never string concat; whole-attribute `${bool}` adds/removes the attribute; a Node/iterable in attribute position throws `RocketTemplateInvalidComposition` (template.ts:86-370).
+- `render` may return primitives, Dates, Nodes, or nested iterables, not only fragments (runtime.ts:163-185; template.ts:44-72).
+- `createCodec({ decode, encode })` builds custom codecs with `.default`/`.docs` (codecs.ts:222-224; exported by the bundle).
+- `publishRocketManifests({ endpoint, headers? })` POSTs all registered component manifests; `RocketElement.manifest()` returns one (runtime.ts:515-526,1614-1621).
+- `host.rocketSignalPath` gives the private base path beside `host.rocketInstanceId` (runtime.ts:832-838).
+- `$$('name', init)` declares a local signal only if missing; `$$.name = v` always writes (runtime.ts:1248-1273,1285-1307).
+- `emit('a', 'b', …)` dispatches several plain events in one call (runtime.ts:1406-1414).
+- Instance id comes from the host `id` attribute, deduped as `id`, `id_2`, …; hosts without `id` get `id<N>`; tag hyphens become `_` (runtime.ts:842-857).
+- Local `@name()` from `data-for`/`data-if` rows resolves via nearest mapped ancestor; nested light-DOM children keep their own owner (runtime.ts:538-555,965-985).
 
 ---
 
@@ -2299,7 +2481,7 @@ Rocket container. Each child is a Rocket component that:
 
 1. Sets `host.style.display = 'none'` in `setup`.
 2. Emits `<name>-register` on mount (via `queueMicrotask` so attributes are set).
-3. Emits `<name>-update` on any prop or attribute change (`MutationObserver` + `effect`).
+3. Emits `<name>-update` on any prop or attribute change (`MutationObserver` + `observeProps`).
 4. Emits `<name>-remove` in `cleanup`.
 
 ```js
@@ -2310,7 +2492,7 @@ rocket('flow-node', {
     height: number.min(1).default(48),
   }),
   render: ({ html }) => html``,           // no visible render
-  setup({ host, props, effect, cleanup, emit }) {
+  setup({ host, props, observeProps, cleanup, emit }) {
     host.style.display = 'none'
 
     const snapshot = () => ({
@@ -2327,11 +2509,8 @@ rocket('flow-node', {
       childList: true, subtree: true, characterData: true, attributes: true,
     })
 
-    // 2. effect() catches reactive prop changes from `data-attr:*` bindings
-    effect(() => {
-      props.x; props.y; props.label; props.width; props.height   // touch to subscribe
-      emit('flow-node-update', snapshot())
-    })
+    // 2. observeProps catches decoded prop changes (props is a plain object, not a signal)
+    observeProps(() => emit('flow-node-update', snapshot()))
 
     // 3. Register on mount (microtask so attrs are in place)
     queueMicrotask(() => emit('flow-node-register', snapshot()))
@@ -2344,11 +2523,12 @@ rocket('flow-node', {
 })
 ```
 
-**Why both MutationObserver AND `effect()`?** MutationObserver catches raw
-attribute writes (e.g. `el.setAttribute('x', …)` from the parent's drag
-handler, or incoming SSE patches that rewrite attributes). `effect()` catches
-reactive prop changes from `data-attr:*` bindings to page signals. Together
-they handle every source of change.
+**Why both MutationObserver AND `observeProps()`?** MutationObserver catches
+raw attribute writes (e.g. `el.setAttribute('x', …)` from the parent's drag
+handler, or incoming SSE patches that rewrite attributes) and child-content
+changes. `observeProps()` fires once per decoded prop change, including
+`data-attr:*` bindings and direct `el.x = …` property writes that never touch
+an attribute. Together they handle every source of change.
 
 **Container side** — single `host` listener for each event:
 
@@ -2426,7 +2606,8 @@ nodes to authoritative positions. Then the prop change on the container fires
 single frame.**
 
 The guard (`if (next === lastServerUpdateTime) return`) is essential because
-reactive proxy reads can fire `observeProps` even without a real value change.
+the `date` codec decodes a NEW `Date` object on every attribute write, so
+`#setProp`'s `Object.is` check (runtime.ts:991) passes even for an equal instant.
 
 **Use this anywhere** you have optimistic UI + server authority — save
 indicators, move/resize handles, voting, edit conflicts. Beats tracking
@@ -2551,8 +2732,7 @@ group.addEventListener('pointerdown', (evt) => {
     }
     emitNodeEvent(entry, 'flow-node-drag-end', { pointerId, origin, source: 'drag',
                                                   x: entry.x, y: entry.y })
-    // write optimistic value back to the wrapper element —
-    // its MutationObserver re-emits flow-node-update to keep container in sync
+    // write back to the wrapper; its MutationObserver re-emits flow-node-update
     entry.el.setAttribute('x', String(entry.x))
     entry.el.setAttribute('y', String(entry.y))
     emitNodeEvent(entry, 'flow-node-update', { pointerId, origin, source: 'drag',
@@ -2832,6 +3012,14 @@ notifications, cleanup) go through `handle_effects`.
 ❌ Module-top-level `addEventListener`/`effect`/`ResizeObserver` (must live inside a component)
 ❌ Mutating `data-replace-url` for one-shot URL updates after save (use the self-removing script pattern)
 ❌ Cache-busting `<script type="module" src="datastar-pro.js?v=…">` while components `import` from the bare path — creates two engine instances and hangs the browser. See "Critical: ES Module URL Identity" above.
+❌ `mode: morph` or `data-cloak` — neither exists in v1.0.4 (`outer` morphs; `data-show` + `style="display:none"`)
+❌ `format!("data: elements {}\n\n", html)` — multi-line HTML breaks the event; split per line (craft does)
+❌ `X-Accel-Buffering: no` on Workers — Cloudflare strips it; dead header
+❌ Rocket `effect(() => props.x)` to react to a prop — `props` is a plain object; use `observeProps(fn, 'x')`
+❌ `$count-1` in an expression — that is a signal named `count-1`; write `$count - 1`
+❌ Reading an undeclared `$signal` and expecting `undefined` — it is created as `''`
+❌ Answering a backend action with `text/javascript` or calling a form action that fails validation — the fetch promise never resolves and the indicator sticks
+❌ `data-indicator:loading` without `_` when the signal must not reach the server — it is sent like any other signal
 
 ---
 
@@ -2842,10 +3030,18 @@ notifications, cleanup) go through `handle_effects`.
 - `_` prefix is a convenience, not a security boundary
 - Signal values are visible in source and modifiable by users — never store secrets in signals
 - CSRF: include tokens in signal state or request headers
-- `@` actions run in sandboxed `Function()` context — but `Function()` requires `unsafe-eval` in CSP:
+- Expressions compile through `Function()`, which needs `unsafe-eval` in CSP:
   ```
   Content-Security-Policy: script-src 'self' 'unsafe-eval'
   ```
+- **CSP nonce mode** (engine/csp.ts:7-29): put the per-response nonce on `<html data-nonce="…">`
+  matching `script-src 'nonce-…'`; expressions then compile via injected `<script nonce>` and
+  Datastar strips the attribute after reading it. Patch responses need no nonce. Aliased bundles
+  use `data-star-nonce`. With Trusted Types, allow the policy named `datastar`
+  (`trusted-types datastar; require-trusted-types-for 'script'`); it does not sanitize.
+  Nonce mode does **not** make untrusted attribute content safe: never interpolate user data
+  into a `data-*` expression; pass it through signals.
+- Craft's `execute_script`/`redirect` go through `data-effect`, so they work under nonce mode where a raw `<script>` would be blocked.
 - Use `data-ignore` to prevent Datastar from processing untrusted content subtrees
 
 ---
@@ -2853,10 +3049,10 @@ notifications, cleanup) go through `handle_effects`.
 ## Quick Reference
 
 ```
-Free attrs (21):
+Free attrs (21 = 17 plugins + 4 engine/morph attrs):
   Signals:     data-signals  data-bind  data-computed  data-ref  data-json-signals
   DOM:         data-text  data-show  data-class  data-attr  data-style
-               data-cloak  data-ignore  data-ignore-morph  data-preserve-attr
+               data-ignore  data-ignore-morph  data-preserve-attr   (no data-cloak)
   Events:      data-on  data-on-intersect  data-on-interval
                data-on-signal-patch  data-on-signal-patch-filter
                data-indicator  data-effect  data-init
@@ -2866,13 +3062,14 @@ Pro attrs (10):
   data-on-raf  data-on-resize  data-persist  data-query-string
   data-replace-url  data-scroll-into-view  data-view-transition
 
-Core actions (8):
+Core actions (9):
   Sync:        @peek  @setAll  @toggleAll
-  Backend:     @get  @post  @put  @patch  @delete   (all support full options object)
+  Backend:     @get  @post  @put  @patch  @delete  @query   (all take the options object)
 
 Pro actions (3):
-  @clipboard(text, isBase64?)  @fit(v, oMin, oMax, nMin, nMax, clamp?, round?)
-  @intl(type, value, options?, locales?)
+  @clipboard(text, isBase64?) → undefined
+  @fit(v, oMin, oMax, nMin, nMax, clamp=false, round=false)
+  @intl(type, value, options, locales?)   relativeTime needs {unit: ['day']}
 
 Signal rule:
   $name      page-level signal, sent to server
@@ -2880,16 +3077,26 @@ Signal rule:
   $$name     Rocket-local signal (in template) / $$.name (in setup), never sent
 
 Request:
-  GET  → ?datastar={"k":"v"}
-  POST → {"k": "v"} body                  (header: Datastar-Request: true)
+  GET/DELETE          → ?datastar={"k":"v"}
+  POST/PUT/PATCH/QUERY → {"k": "v"} body       (header: Datastar-Request: true)
+  contentType:'form'  → form body, NO signals
 
 SSE event types (only two):
-  datastar-patch-elements   primary — HTML → idiomorph(or replace) → DOM
+  datastar-patch-elements   primary — HTML → morph (outer/inner) or insert/replace → DOM
                             modes: outer (default), inner, replace, prepend,
-                            append, before, after, remove
-                            options: selector, mode, useViewTransition, namespace
+                            append, before, after, remove   (no "morph" mode)
+                            lines: selector, mode, namespace, useViewTransition,
+                            viewTransitionSelector, elements (one line per HTML line)
   datastar-patch-signals    secondary — transient state only
-                            options: onlyIfMissing
+                            lines: onlyIfMissing, signals   (arrays replace, objects merge)
+
+Rust on Workers:
+  builder:    craft_core::datastar::sse::{message, accumulator, patch_elements,
+              patch_signals, patch_signals_raw, redirect, execute_script}
+  stream:     worker::Response::from_stream(mpsc::Receiver<Result<String>>) or
+              craft_core::sse_bridge (DO→Worker WebSocket, 25 s keepalive, retry: 1000)
+  headers:    Content-Type: text/event-stream, Cache-Control: no-cache  (no X-Accel-Buffering)
+  crate:      datastar 0.4.1 default-features=false → .into_datastar_event().to_string()
 
 Rocket — shipping JS-call API:
   Define:    rocket('tag-name', {
@@ -2900,7 +3107,7 @@ Rocket — shipping JS-call API:
                  ...
                }),
                refs: { input: HTMLInputElement },
-               mode: 'light' | 'open' | 'closed',
+               mode: 'open' (default) | 'closed' | 'light',
                renderOnPropChange: true | false | (ctx) => boolean,
                manifest: { slots: [...], events: [...] },
                setup({ props, $, $$, effect, cleanup, actions, action,
@@ -2937,14 +3144,17 @@ Rocket — shipping JS-call API:
               _rocket.<tag>.<instanceId>.name
               data-ref:<name> populates refs.<name> in onFirstRender
 
-  Lifecycle:  connectedCallback → decode props → run setup → render → apply
-              datastar → hydrate refs → onFirstRender
-              prop change → observeProps → coalesce render → render → apply
-              disconnectedCallback → cleanup callbacks → effect disposers →
-              actions deregistered → instance state removed
+  Lifecycle:  connectedCallback → decode props (plain object) → run setup →
+              render → apply datastar → hydrate refs → onFirstRender
+              prop change → observeProps(props, changes) → coalesced render
+              disconnectedCallback → instance signals removed → global action
+              cleanups → if/for controllers → cleanup+effect disposers → actions cleared
 
-  Render mode: light (default, with auto CSS scoping) | open | closed shadow
-  Events:      emit('name'), emit('name', detail, options?), emitCancellable
+  Render mode: open shadow (default) | closed shadow | light (no style scoping)
+  Props:       plain object, NOT reactive — effect(() => props.x) never re-runs
+  Actions:     actions.* = global registry only; local action(name) via @name()
+  Events:      emit('name'), emit('a','b'), emit('name', detail, options?) → void;
+               emitCancellable → boolean
 
 Architectural rule:  every client-side subsystem is a Rocket component OR a pure
                      helper module. No top-level addEventListener/effect/
@@ -2953,8 +3163,9 @@ Architectural rule:  every client-side subsystem is a Rocket component OR a pure
 Pro inventory paths (read for ground truth):
   Pro attrs:       ~/Projects/github/datastar-pro/library/src/pro/attributes/
   Pro actions:     ~/Projects/github/datastar-pro/library/src/pro/actions/
-  Rocket runtime:  ~/Projects/github/datastar-pro/library/src/pro/rocket/runtime.ts
-  Rocket codecs:   ~/Projects/github/datastar-pro/library/src/pro/rocket/codecs.ts
+  Rocket runtime:  ~/Projects/github/datastar-pro/library/src/rocket/runtime.ts
+  Rocket codecs:   ~/Projects/github/datastar-pro/library/src/rocket/codecs.ts
+  Rocket bundle:   datastar-rocket.js (free, MIT repo) or datastar-pro.js; not datastar.js
   Inspector:       ~/Projects/github/datastar-pro/webcomponents/datastar-inspector/src/index.ts
   Examples:        ~/Projects/EveryGoodWork/temp/datastar-examples/
   Live docs:       https://data-star.dev/
@@ -2966,6 +3177,6 @@ OLD template-based API (REMOVED in beta.1):
     ...rendered template markup...
   </template>
 
-  → DOES NOT WORK in shipping Pro. If you see this in old code or docs,
+  → DOES NOT WORK in shipping bundles. If you see this in old code or docs,
   translate to the JS-call rocket(tag, {props, setup, render, ...}) shape above.
 ```
