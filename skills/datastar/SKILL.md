@@ -28,6 +28,10 @@ description: >
 
 # Datastar Skill
 
+**On load, state the pin in one line before anything else:**
+`datastar skill: Datastar v1.0.4 (8f64418) · Rocket beta.2 · verified 2026-10-07`.
+If the project pins a different Datastar version, say so in the same line and treat the skill as suspect for that delta.
+
 Datastar — hypermedia-first frontend framework (data-star.dev).
 Datastar core and Pro are **v1.0.4** (local checkout `~/Projects/github/datastar-pro`
 at `8f64418`, 2026-09-21); Rocket is **beta.2** (JavaScript call-based API; the
