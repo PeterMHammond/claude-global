@@ -6,7 +6,12 @@ input=$(cat)
 j(){ printf '%s' "$input" | jq -r "$1 // empty"; }
 model=$(j '.model.display_name')
 used=$(j '.context_window.used_percentage')
-ctx=""; [ -n "$used" ] && ctx=$(printf 'ctx %.0f%%  ' "$used")
+ctx=""; ctxcolor=32
+if [ -n "$used" ]; then
+  ctx=$(printf 'ctx %.0f%%  ' "$used")
+  pct=${used%.*}; pct=${pct:-0}
+  if [ "$pct" -gt 50 ]; then ctxcolor=31; elif [ "$pct" -gt 30 ]; then ctxcolor=33; fi
+fi
 cwd=$(j '.workspace.current_dir'); cwd="${cwd:-$PWD}"
 sid=$(j '.session_id')
 mark=""; focus=""
@@ -27,4 +32,4 @@ width="${COLUMNS:-$(tput cols 2>/dev/null)}"; width="${width:-80}"; width=$((wid
 # Count display columns, not bytes, so the emoji and the middle dot do not skew the padding.
 lw=$(printf '%s' "$left" | python3 -c 'import sys,unicodedata;s=sys.stdin.read();print(sum(2 if unicodedata.east_asian_width(c) in "WF" else 1 for c in s))' 2>/dev/null || printf '%s' "${#left}")
 pad=$((width - lw - ${#ctx} - ${#model})); [ "$pad" -lt 1 ] && pad=1
-printf '%s%*s\033[32m%s\033[38;5;208m%s\033[0m' "$left" "$pad" "" "$ctx" "$model"
+printf '%s%*s\033[%sm%s\033[38;5;208m%s\033[0m' "$left" "$pad" "" "$ctxcolor" "$ctx" "$model"
