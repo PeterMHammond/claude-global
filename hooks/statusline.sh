@@ -6,11 +6,11 @@ input=$(cat)
 j(){ printf '%s' "$input" | jq -r "$1 // empty"; }
 model=$(j '.model.display_name')
 used=$(j '.context_window.used_percentage')
-ctx=""; ctxcolor=32
+ctx=""; ctxcolor="38;2;80;200;120"
 if [ -n "$used" ]; then
   ctx=$(printf 'ctx %.0f%%  ' "$used")
   pct=${used%.*}; pct=${pct:-0}
-  if [ "$pct" -gt 50 ]; then ctxcolor=31; elif [ "$pct" -gt 30 ]; then ctxcolor=33; fi
+  if [ "$pct" -gt 50 ]; then ctxcolor="38;2;255;70;70"; elif [ "$pct" -gt 30 ]; then ctxcolor="38;2;255;210;0"; fi
 fi
 cwd=$(j '.workspace.current_dir'); cwd="${cwd:-$PWD}"
 sid=$(j '.session_id')
